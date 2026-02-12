@@ -1,0 +1,62 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+interface User {
+  _id: string;
+  email: string;
+  name: string;
+  settings: {
+    goals: {
+      kcal: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+    };
+    units: 'kg' | 'lb';
+    timezone: string;
+    pinRememberMinutes: number;
+  };
+}
+
+export function useAuth() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+      } else {
+        // 401 is normal when not logged in, don't log as error
+        setUser(null);
+      }
+    } catch (error) {
+      // Network errors are fine, user is just not authenticated
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    setUser(null);
+    router.push('/login');
+  };
+
+  return {
+    user,
+    loading,
+    logout,
+    refresh: checkAuth,
+  };
+}
