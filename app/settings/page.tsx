@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import MacroCalculator from '@/components/macros/MacroCalculator';
 
 export default function SettingsPage() {
   const { user, loading, logout } = useAuth();
@@ -63,6 +64,9 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-2xl mx-auto px-4 py-6">
         <h1 className="text-2xl font-bold mb-6">Ajustes</h1>
+
+        {/* Macro Calculator */}
+        <MacroCalculator onGoalsApplied={(newGoals) => setGoals(newGoals)} />
 
         <div className="bg-white rounded-lg shadow p-6 mb-6 animate-fade-in transition-smooth hover:shadow-md">
           <h2 className="text-lg font-semibold mb-4">Objetivos diarios</h2>

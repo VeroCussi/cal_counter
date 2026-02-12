@@ -17,6 +17,13 @@ interface User {
     units: 'kg' | 'lb';
     timezone: string;
     pinRememberMinutes: number;
+    profile?: {
+      age?: number;
+      gender?: 'male' | 'female';
+      heightCm?: number;
+      activityLevel?: 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active' | 'extremely_active';
+      goal?: 'cut' | 'maintain' | 'bulk';
+    };
   };
 }
 

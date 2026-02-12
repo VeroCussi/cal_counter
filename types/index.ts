@@ -1,5 +1,24 @@
 // Shared TypeScript types
 
+export interface UserProfile {
+  age?: number;
+  gender?: 'male' | 'female';
+  heightCm?: number;
+  activityLevel?: 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active' | 'extremely_active';
+  goal?: 'cut' | 'maintain' | 'bulk';
+}
+
+export interface MacroCalculationResult {
+  bmr: number;
+  tdee: number;
+  targetCalories: number;
+  macros: {
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+}
+
 export interface User {
   _id: string;
   email: string;
@@ -16,6 +35,7 @@ export interface User {
     units: 'kg' | 'lb';
     timezone: string;
     pinRememberMinutes: number;
+    profile?: UserProfile;
   };
   createdAt: Date;
   updatedAt: Date;

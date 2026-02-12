@@ -52,6 +52,15 @@ export const weightSchema = z.object({
   weightKg: z.number().positive('El peso debe ser positivo'),
 });
 
+// Profile validations
+export const profileSchema = z.object({
+  age: z.number().min(13).max(120).optional(),
+  gender: z.enum(['male', 'female']).optional(),
+  heightCm: z.number().min(100).max(250).optional(),
+  activityLevel: z.enum(['sedentary', 'lightly_active', 'moderately_active', 'very_active', 'extremely_active']).optional(),
+  goal: z.enum(['cut', 'maintain', 'bulk']).optional(),
+});
+
 // Settings validations
 export const settingsSchema = z.object({
   goals: z.object({
@@ -63,6 +72,7 @@ export const settingsSchema = z.object({
   units: z.enum(['kg', 'lb']),
   timezone: z.string(),
   pinRememberMinutes: z.number().min(0).max(1440), // Max 24 horas
+  profile: profileSchema.optional(),
 });
 
 // MongoDB ObjectId validation
@@ -74,5 +84,6 @@ export type PinInput = z.infer<typeof pinSchema>;
 export type FoodInput = z.infer<typeof foodSchema>;
 export type EntryInput = z.infer<typeof entrySchema>;
 export type WeightInput = z.infer<typeof weightSchema>;
+export type ProfileInput = z.infer<typeof profileSchema>;
 export type SettingsInput = z.infer<typeof settingsSchema>;
 export type MongoId = z.infer<typeof mongoIdSchema>;

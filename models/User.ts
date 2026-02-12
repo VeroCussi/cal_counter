@@ -15,6 +15,17 @@ const UserSchema = new mongoose.Schema({
     units: { type: String, enum: ['kg', 'lb'], default: 'kg' },
     timezone: { type: String, default: 'UTC' },
     pinRememberMinutes: { type: Number, default: 15 },
+    profile: {
+      age: { type: Number, required: false },
+      gender: { type: String, enum: ['male', 'female'], required: false },
+      heightCm: { type: Number, required: false },
+      activityLevel: { 
+        type: String, 
+        enum: ['sedentary', 'lightly_active', 'moderately_active', 'very_active', 'extremely_active'],
+        required: false 
+      },
+      goal: { type: String, enum: ['cut', 'maintain', 'bulk'], required: false },
+    },
   },
 }, { timestamps: true });
 
