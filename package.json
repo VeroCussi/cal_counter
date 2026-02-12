@@ -11,12 +11,16 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.6",
     "@types/react-dom": "^19.0.2",
     "autoprefixer": "^10.4.20",
     "bcryptjs": "^2.4.3",
     "dexie": "^4.0.7",
+    "eslint": "^9.18.0",
+    "eslint-config-next": "^15.1.6",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.4",
     "next": "^15.1.6",
@@ -33,11 +37,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
-    "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.14",
-    "@types/jsonwebtoken": "^9.0.7",
-    "eslint": "^9.18.0",
-    "eslint-config-next": "^15.1.6",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0"
   }
