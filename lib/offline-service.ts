@@ -18,8 +18,17 @@ export interface EntryWithFood {
       carbs: number;
       fat: number;
     };
+    serving?: {
+      customServings?: Array<{ id: string; label: string; value: number }>;
+    };
   };
-  quantity: { grams: number };
+  quantity: {
+    grams: number;
+    unit?: 'g' | 'ml' | string;
+    customServingId?: string;
+    displayValue?: number;
+    displayUnit?: string;
+  };
   computedMacros: {
     kcal: number;
     protein: number;
@@ -44,7 +53,13 @@ export class OfflineService {
       date: string;
       mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
       foodId: string;
-      quantity: { grams: number };
+      quantity: {
+        grams: number;
+        unit?: 'g' | 'ml' | string;
+        customServingId?: string;
+        displayValue?: number;
+        displayUnit?: string;
+      };
       computedMacros: {
         kcal: number;
         protein: number;
@@ -399,6 +414,9 @@ export class OfflineService {
             name: localFood.name,
             brand: localFood.brand,
             macros: localFood.macros,
+            serving: localFood.serving ? {
+              customServings: localFood.serving.customServings,
+            } : undefined,
           };
         }
       }

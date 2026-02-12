@@ -12,10 +12,21 @@ const FoodSchema = new mongoose.Schema({
   serving: {
     type: {
       type: String,
-      enum: ['per100g', 'perServing'],
+      enum: ['per100g', 'per100ml', 'perServing'],
       required: true,
     },
     servingSizeG: { type: Number },
+    servingSizeMl: { type: Number },
+    baseUnit: {
+      type: String,
+      enum: ['g', 'ml'],
+      default: 'g',
+    },
+    customServings: [{
+      id: { type: String, required: true },
+      label: { type: String, required: true },
+      value: { type: Number, required: true, min: 0 },
+    }],
   },
   macros: {
     kcal: { type: Number, required: true, min: 0 },

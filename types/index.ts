@@ -53,14 +53,23 @@ export interface User {
   updatedAt: Date;
 }
 
+export interface CustomServing {
+  id: string;
+  label: string;
+  value: number;
+}
+
 export interface Food {
   _id: string;
   ownerUserId: string;
   name: string;
   brand?: string;
   serving: {
-    type: 'per100g' | 'perServing';
+    type: 'per100g' | 'per100ml' | 'perServing';
     servingSizeG?: number;
+    servingSizeMl?: number;
+    baseUnit?: 'g' | 'ml';
+    customServings?: CustomServing[];
   };
   macros: {
     kcal: number;
@@ -83,6 +92,10 @@ export interface Entry {
   foodId: string;
   quantity: {
     grams: number;
+    unit?: 'g' | 'ml' | string;
+    customServingId?: string;
+    displayValue?: number;
+    displayUnit?: string;
   };
   computedMacros: {
     kcal: number;

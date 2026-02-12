@@ -105,6 +105,28 @@ export default function TodayPage() {
     return d.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 
+  const formatQuantity = (entry: EntryWithFood) => {
+    // If we have custom serving ID, try to find the label
+    if (entry.quantity.customServingId && entry.foodId.serving?.customServings) {
+      const customServing = entry.foodId.serving.customServings.find(
+        (s) => s.id === entry.quantity.customServingId
+      );
+      if (customServing) {
+        // Show label with value and unit
+        const unit = entry.quantity.displayUnit || 'g';
+        return `${customServing.label} (${customServing.value} ${unit})`;
+      }
+    }
+    
+    // If we have display value and unit, use that
+    if (entry.quantity.displayValue && entry.quantity.displayUnit) {
+      return `${entry.quantity.displayValue} ${entry.quantity.displayUnit}`;
+    }
+    
+    // Default: show grams
+    return `${entry.quantity.grams}g`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {user && <OfflineBadge userId={user._id} />}
@@ -166,7 +188,7 @@ export default function TodayPage() {
                         {entry.foodId.name}
                         {entry.foodId.brand && ` (${entry.foodId.brand})`}
                         <span className="text-gray-500 ml-2">
-                          {entry.quantity.grams}g
+                          {formatQuantity(entry)}
                         </span>
                       </span>
                       <div className="flex items-center gap-2">

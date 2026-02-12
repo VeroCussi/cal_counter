@@ -77,8 +77,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate macros
-    const computedMacros = calculateMacros(food.toObject() as any, validated.quantity.grams);
+    // Calculate macros with options
+    const computedMacros = calculateMacros(
+      food.toObject() as any,
+      validated.quantity.grams,
+      {
+        customServingId: validated.quantity.customServingId,
+        displayValue: validated.quantity.displayValue,
+        displayUnit: validated.quantity.displayUnit as 'g' | 'ml' | undefined,
+      }
+    );
 
     const entry = await Entry.create({
       ...validated,

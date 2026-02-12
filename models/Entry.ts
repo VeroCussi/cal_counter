@@ -25,6 +25,10 @@ const EntrySchema = new mongoose.Schema({
   },
   quantity: {
     grams: { type: Number, required: true, min: 0 },
+    unit: { type: String },
+    customServingId: { type: String },
+    displayValue: { type: Number },
+    displayUnit: { type: String },
   },
   computedMacros: {
     kcal: { type: Number, required: true, min: 0 },

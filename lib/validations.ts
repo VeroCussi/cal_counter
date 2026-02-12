@@ -18,12 +18,34 @@ export const pinSchema = z.object({
 });
 
 // Food validations
+const customServingSchema = z.object({
+  id: z.string().min(1, 'ID es requerido'),
+  label: z.string().min(1, 'Label es requerido'),
+  value: z.number().positive('El valor debe ser positivo'),
+});
+
 export const foodSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
   brand: z.string().optional(),
   serving: z.object({
-    type: z.enum(['per100g', 'perServing']),
+    type: z.enum(['per100g', 'per100ml', 'perServing']),
     servingSizeG: z.number().positive().optional(),
+    servingSizeMl: z.number().positive().optional(),
+    baseUnit: z.enum(['g', 'ml']).optional().default('g'),
+    customServings: z.array(customServingSchema).optional(),
+  }).refine((data) => {
+    // Si es perServing, debe tener servingSizeG o servingSizeMl según baseUnit
+    if (data.type === 'perServing') {
+      const baseUnit = data.baseUnit || 'g';
+      if (baseUnit === 'g') {
+        return data.servingSizeG !== undefined && data.servingSizeG > 0;
+      } else {
+        return data.servingSizeMl !== undefined && data.servingSizeMl > 0;
+      }
+    }
+    return true;
+  }, {
+    message: 'perServing requiere servingSizeG o servingSizeMl según baseUnit',
   }),
   macros: z.object({
     kcal: z.number().min(0),
@@ -43,6 +65,10 @@ export const entrySchema = z.object({
   foodId: z.string().min(1, 'Food ID es requerido'),
   quantity: z.object({
     grams: z.number().positive('Los gramos deben ser positivos'),
+    unit: z.string().optional(),
+    customServingId: z.string().optional(),
+    displayValue: z.number().positive().optional(),
+    displayUnit: z.string().optional(),
   }),
 });
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Food } from '@/types';
 
 interface FoodSearchModalProps {
@@ -25,6 +26,7 @@ interface ExternalProduct {
 }
 
 export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchModalProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'favorites' | 'off' | 'usda'>('favorites');
   const [searchQuery, setSearchQuery] = useState('');
   const [favorites, setFavorites] = useState<Food[]>([]);
@@ -190,12 +192,23 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-xl font-bold">Buscar alimento</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
-          >
-            ×
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                onClose();
+                router.push('/foods/new');
+              }}
+              className="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+            >
+              Crear manualmente
+            </button>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 text-2xl"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}

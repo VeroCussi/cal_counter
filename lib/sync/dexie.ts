@@ -6,7 +6,13 @@ export interface LocalFood {
   ownerUserId: string;
   name: string;
   brand?: string;
-  serving: { type: 'per100g' | 'perServing'; servingSizeG?: number };
+  serving: {
+    type: 'per100g' | 'per100ml' | 'perServing';
+    servingSizeG?: number;
+    servingSizeMl?: number;
+    baseUnit?: 'g' | 'ml';
+    customServings?: Array<{ id: string; label: string; value: number }>;
+  };
   macros: { kcal: number; protein: number; carbs: number; fat: number };
   source: 'custom' | 'openfoodfacts' | 'usda';
   externalId?: string;
@@ -23,7 +29,13 @@ export interface LocalEntry {
   date: string;
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   foodId: string;
-  quantity: { grams: number };
+  quantity: {
+    grams: number;
+    unit?: 'g' | 'ml' | string;
+    customServingId?: string;
+    displayValue?: number;
+    displayUnit?: string;
+  };
   computedMacros: { kcal: number; protein: number; carbs: number; fat: number };
   createdAt: Date;
   updatedAt: Date;
