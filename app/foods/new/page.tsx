@@ -31,13 +31,18 @@ export default function NewFoodPage() {
     
     // If baseUnit changes and servingType is not perServing, update servingType
     if (name === 'baseUnit' && formData.servingType !== 'perServing') {
+      const newBaseUnit = value as 'g' | 'ml';
       setFormData({
         ...formData,
-        [name]: value,
-        servingType: value === 'g' ? 'per100g' : 'per100ml',
+        baseUnit: newBaseUnit,
+        servingType: newBaseUnit === 'g' ? 'per100g' : 'per100ml',
       });
-    } else {
-      // Normal update, including servingType changes
+    } else if (name === 'servingType') {
+      setFormData({
+        ...formData,
+        servingType: value as 'per100g' | 'per100ml' | 'perServing',
+      });
+    } else if (name === 'name' || name === 'brand' || name === 'servingSize' || name === 'kcal' || name === 'protein' || name === 'carbs' || name === 'fat') {
       setFormData({
         ...formData,
         [name]: value,
