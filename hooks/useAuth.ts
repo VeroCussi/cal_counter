@@ -23,6 +23,13 @@ interface User {
       heightCm?: number;
       activityLevel?: 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active' | 'extremely_active';
       goal?: 'cut' | 'maintain' | 'bulk';
+      cutIntensity?: 'gentle' | 'moderate' | 'aggressive';
+      macroDistribution?: {
+        type?: 'balanced' | 'high_protein' | 'keto' | 'low_carb' | 'custom';
+        proteinPercent?: number;
+        fatPercent?: number;
+        carbsPercent?: number;
+      };
     };
   };
 }

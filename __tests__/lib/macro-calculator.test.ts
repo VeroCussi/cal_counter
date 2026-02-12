@@ -3,6 +3,8 @@ import {
   calculateTDEE,
   calculateTargetCalories,
   calculateMacros,
+  calculateMacrosByDistribution,
+  getMacroDistribution,
   calculateMacrosFromProfile,
   inchesToCm,
   cmToInches,
@@ -49,10 +51,22 @@ describe('Macro Calculator', () => {
   });
 
   describe('calculateTargetCalories', () => {
-    it('should calculate target calories for cut goal', () => {
+    it('should calculate target calories for cut goal with gentle intensity (default)', () => {
       const tdee = 2000;
-      const target = calculateTargetCalories(tdee, 'cut');
-      expect(target).toBe(1500); // 2000 - 500
+      const target = calculateTargetCalories(tdee, 'cut', 'gentle');
+      expect(target).toBe(1750); // 2000 - 250
+    });
+
+    it('should calculate target calories for cut goal with moderate intensity', () => {
+      const tdee = 2000;
+      const target = calculateTargetCalories(tdee, 'cut', 'moderate');
+      expect(target).toBe(1600); // 2000 - 400
+    });
+
+    it('should calculate target calories for cut goal with aggressive intensity', () => {
+      const tdee = 2000;
+      const target = calculateTargetCalories(tdee, 'cut', 'aggressive');
+      expect(target).toBe(1450); // 2000 - 550
     });
 
     it('should calculate target calories for maintain goal', () => {
@@ -69,7 +83,7 @@ describe('Macro Calculator', () => {
 
     it('should enforce minimum of 1200 calories', () => {
       const tdee = 1000;
-      const target = calculateTargetCalories(tdee, 'cut');
+      const target = calculateTargetCalories(tdee, 'cut', 'gentle');
       expect(target).toBe(1200); // Minimum enforced
     });
   });
@@ -209,6 +223,132 @@ describe('Macro Calculator', () => {
       it('should handle common weights', () => {
         expect(kgToPounds(70)).toBe(154); // 70 * 2.20462 = 154.32 ≈ 154
       });
+    });
+  });
+
+  describe('calculateMacrosByDistribution', () => {
+    it('should calculate macros correctly with balanced distribution', () => {
+      // 2000 kcal, 30% protein, 30% fat, 40% carbs
+      const result = calculateMacrosByDistribution(2000, { protein: 30, fat: 30, carbs: 40 });
+      // Protein: 2000 * 0.30 / 4 = 150g
+      // Fat: 2000 * 0.30 / 9 = 66.67g ≈ 67g
+      // Carbs: remaining calories / 4
+      expect(result.protein).toBe(150);
+      expect(result.fat).toBe(67);
+      expect(result.carbs).toBeGreaterThan(0);
+    });
+
+    it('should calculate macros correctly with keto distribution', () => {
+      // 2000 kcal, 20% protein, 70% fat, 10% carbs
+      const result = calculateMacrosByDistribution(2000, { protein: 20, fat: 70, carbs: 10 });
+      // Protein: 2000 * 0.20 / 4 = 100g
+      // Fat: 2000 * 0.70 / 9 = 155.56g ≈ 156g
+      // Carbs: 2000 * 0.10 / 4 = 50g
+      expect(result.protein).toBe(100);
+      expect(result.fat).toBe(156);
+      expect(result.carbs).toBe(50);
+    });
+
+    it('should normalize percentages that do not sum to 100', () => {
+      // 2000 kcal, 50% protein, 30% fat, 20% carbs (sums to 100)
+      const result = calculateMacrosByDistribution(2000, { protein: 50, fat: 30, carbs: 20 });
+      expect(result.protein).toBe(250); // 2000 * 0.50 / 4
+      expect(result.fat).toBe(67); // 2000 * 0.30 / 9
+      expect(result.carbs).toBe(100); // 2000 * 0.20 / 4
+    });
+  });
+
+  describe('getMacroDistribution', () => {
+    it('should return balanced distribution', () => {
+      const dist = getMacroDistribution('balanced');
+      expect(dist.protein).toBe(30);
+      expect(dist.fat).toBe(30);
+      expect(dist.carbs).toBe(40);
+    });
+
+    it('should return high_protein distribution', () => {
+      const dist = getMacroDistribution('high_protein');
+      expect(dist.protein).toBe(40);
+      expect(dist.fat).toBe(30);
+      expect(dist.carbs).toBe(30);
+    });
+
+    it('should return keto distribution', () => {
+      const dist = getMacroDistribution('keto');
+      expect(dist.protein).toBe(20);
+      expect(dist.fat).toBe(70);
+      expect(dist.carbs).toBe(10);
+    });
+
+    it('should return custom distribution when provided', () => {
+      const custom = { protein: 50, fat: 30, carbs: 20 };
+      const dist = getMacroDistribution('custom', custom);
+      expect(dist).toEqual(custom);
+    });
+  });
+
+  describe('calculateMacrosFromProfile with distributions', () => {
+    const baseProfile: UserProfile = {
+      age: 30,
+      gender: 'female',
+      heightCm: 165,
+      activityLevel: 'moderately_active',
+      goal: 'cut',
+    };
+
+    it('should use balanced distribution by default', () => {
+      const result = calculateMacrosFromProfile(baseProfile, 65);
+      expect(result).not.toBeNull();
+      // Should use balanced (30/30/40) instead of legacy method
+      expect(result?.macros.protein).toBeGreaterThan(0);
+      expect(result?.macros.fat).toBeGreaterThan(0);
+      expect(result?.macros.carbs).toBeGreaterThan(0);
+    });
+
+    it('should use high_protein distribution when specified', () => {
+      const profile = {
+        ...baseProfile,
+        macroDistribution: { type: 'high_protein' },
+      };
+      const result = calculateMacrosFromProfile(profile, 65);
+      expect(result).not.toBeNull();
+      // High protein should have more protein relative to carbs
+      expect(result?.macros.protein).toBeGreaterThan(result?.macros.carbs || 0);
+    });
+
+    it('should use keto distribution when specified', () => {
+      const profile = {
+        ...baseProfile,
+        macroDistribution: { type: 'keto' },
+      };
+      const result = calculateMacrosFromProfile(profile, 65);
+      expect(result).not.toBeNull();
+      // Keto should have very low carbs and high fat
+      expect(result?.macros.carbs).toBeLessThan(100);
+      expect(result?.macros.fat).toBeGreaterThan(result?.macros.protein || 0);
+    });
+
+    it('should use custom distribution when specified', () => {
+      const profile = {
+        ...baseProfile,
+        macroDistribution: {
+          type: 'custom',
+          proteinPercent: 50,
+          fatPercent: 30,
+          carbsPercent: 20,
+        },
+      };
+      const result = calculateMacrosFromProfile(profile, 65);
+      expect(result).not.toBeNull();
+      // Custom 50/30/20 should reflect in the macros
+      const totalCal = result!.targetCalories;
+      const proteinCal = result!.macros.protein * 4;
+      const fatCal = result!.macros.fat * 9;
+      const carbsCal = result!.macros.carbs * 4;
+      // Check that percentages are approximately correct
+      expect(proteinCal / totalCal).toBeCloseTo(0.50, 1);
+      expect(fatCal / totalCal).toBeCloseTo(0.30, 1);
+      expect(carbsCal / totalCal).toBeCloseTo(0.20, 1);
     });
   });
 });

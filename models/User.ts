@@ -25,6 +25,17 @@ const UserSchema = new mongoose.Schema({
         required: false 
       },
       goal: { type: String, enum: ['cut', 'maintain', 'bulk'], required: false },
+      cutIntensity: { type: String, enum: ['gentle', 'moderate', 'aggressive'], required: false },
+      macroDistribution: {
+        type: { 
+          type: String, 
+          enum: ['balanced', 'high_protein', 'keto', 'low_carb', 'custom'],
+          required: false 
+        },
+        proteinPercent: { type: Number, required: false },
+        fatPercent: { type: Number, required: false },
+        carbsPercent: { type: Number, required: false },
+      },
     },
   },
 }, { timestamps: true });

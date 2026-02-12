@@ -9,7 +9,8 @@ import {
   kgToPounds,
   poundsToKg,
 } from '@/lib/macro-calculator';
-import { UserProfile, MacroCalculationResult } from '@/types';
+import { UserProfile, MacroCalculationResult, MacroDistributionType, CutIntensity } from '@/types';
+import { getMacroDistribution } from '@/lib/macro-calculator';
 
 interface WeightEntry {
   _id: string;
@@ -21,7 +22,7 @@ interface MacroCalculatorProps {
   onGoalsApplied?: (goals: { kcal: number; protein: number; carbs: number; fat: number }) => void;
 }
 
-export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps = {}) {
+export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps) {
   const { user, refresh } = useAuth();
   const [profile, setProfile] = useState<UserProfile>({
     age: undefined,
@@ -29,6 +30,15 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
     heightCm: undefined,
     activityLevel: undefined,
     goal: undefined,
+    cutIntensity: 'gentle', // Default to gentle
+    macroDistribution: {
+      type: 'balanced',
+    },
+  });
+  const [customMacros, setCustomMacros] = useState({
+    protein: 30,
+    fat: 30,
+    carbs: 40,
   });
   const [manualWeight, setManualWeight] = useState<string>('');
   const [useManualWeight, setUseManualWeight] = useState(false);
@@ -38,15 +48,35 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
   const [saving, setSaving] = useState(false);
   const [applying, setApplying] = useState(false);
 
-  const units = user?.settings.units || 'kg';
+  const units = user?.settings?.units || 'kg';
 
   // Load latest weight
   useEffect(() => {
     if (user) {
       loadLatestWeight();
       // Load existing profile if available
-      if (user.settings.profile) {
-        setProfile(user.settings.profile);
+      if (user.settings?.profile) {
+        const userProfile = user.settings.profile;
+        const macroDist = userProfile.macroDistribution;
+        const loadedProfile: UserProfile = {
+          ...userProfile,
+          macroDistribution: {
+            type: (macroDist?.type || 'balanced') as MacroDistributionType,
+            proteinPercent: macroDist?.proteinPercent,
+            fatPercent: macroDist?.fatPercent,
+            carbsPercent: macroDist?.carbsPercent,
+          },
+          cutIntensity: userProfile.cutIntensity || (userProfile.goal === 'cut' ? 'gentle' : undefined),
+        };
+        setProfile(loadedProfile);
+        // Load custom macros if they exist
+        if (loadedProfile.macroDistribution?.type === 'custom') {
+          setCustomMacros({
+            protein: loadedProfile.macroDistribution.proteinPercent || 30,
+            fat: loadedProfile.macroDistribution.fatPercent || 30,
+            carbs: loadedProfile.macroDistribution.carbsPercent || 40,
+          });
+        }
       }
     }
   }, [user]);
@@ -129,12 +159,17 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
 
     try {
       setSaving(true);
+      // Clean profile: remove cutIntensity if goal is not 'cut'
+      const cleanedProfile = {
+        ...profile,
+        cutIntensity: profile.goal === 'cut' ? profile.cutIntensity : undefined,
+      };
       const res = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...user.settings,
-          profile,
+          profile: cleanedProfile,
         }),
       });
 
@@ -169,10 +204,15 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
         carbs: calculation.macros.carbs,
         fat: calculation.macros.fat,
       };
+      // Clean profile: remove cutIntensity if goal is not 'cut'
+      const cleanedProfile = {
+        ...profile,
+        cutIntensity: profile.goal === 'cut' ? profile.cutIntensity : undefined,
+      };
       const payload = {
         ...user.settings,
         goals: newGoals,
-        profile, // Also save profile
+        profile: cleanedProfile, // Also save profile
       };
       
       const res = await fetch('/api/settings', {
@@ -369,7 +409,15 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
           <label className="block text-sm font-medium mb-1">Objetivo</label>
           <select
             value={profile.goal || ''}
-            onChange={(e) => setProfile({ ...profile, goal: e.target.value as UserProfile['goal'] })}
+            onChange={(e) => {
+              const newGoal = e.target.value as UserProfile['goal'];
+              setProfile({ 
+                ...profile, 
+                goal: newGoal,
+                // Reset cutIntensity if goal changes away from 'cut'
+                cutIntensity: newGoal === 'cut' ? (profile.cutIntensity || 'gentle') : undefined,
+              });
+            }}
             className="w-full border rounded px-3 py-2"
           >
             <option value="">Selecciona...</option>
@@ -377,6 +425,133 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
             <option value="maintain">Mantenimiento</option>
             <option value="bulk">Ganancia de peso</option>
           </select>
+        </div>
+
+        {/* Cut Intensity - Only shown when goal is 'cut' */}
+        {profile.goal === 'cut' && (
+          <div>
+            <label className="block text-sm font-medium mb-1">Velocidad de pérdida</label>
+            <select
+              value={profile.cutIntensity || 'gentle'}
+              onChange={(e) => setProfile({ ...profile, cutIntensity: e.target.value as CutIntensity })}
+              className="w-full border rounded px-3 py-2"
+            >
+              <option value="gentle">Suave (recomendado): -250 kcal/día (~0,25 kg/sem)</option>
+              <option value="moderate">Moderado: -400 kcal/día (~0,4 kg/sem)</option>
+              <option value="aggressive">Rápido: -500 a -600 kcal/día (solo si experiencia y buen control)</option>
+            </select>
+          </div>
+        )}
+
+        {/* Macro Distribution */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Distribución de Macros</label>
+          <select
+            value={profile.macroDistribution?.type || 'balanced'}
+            onChange={(e) => {
+              const type = e.target.value as MacroDistributionType;
+              if (type === 'custom') {
+                setProfile({
+                  ...profile,
+                  macroDistribution: {
+                    type: 'custom',
+                    proteinPercent: customMacros.protein,
+                    fatPercent: customMacros.fat,
+                    carbsPercent: customMacros.carbs,
+                  },
+                });
+              } else {
+                setProfile({
+                  ...profile,
+                  macroDistribution: { type },
+                });
+              }
+            }}
+            className="w-full border rounded px-3 py-2 mb-2"
+          >
+            <option value="balanced">Equilibrada (30% Proteína / 30% Grasa / 40% Carbohidratos)</option>
+            <option value="high_protein">Alta Proteína (40% Proteína / 30% Grasa / 30% Carbohidratos)</option>
+            <option value="keto">Keto (20% Proteína / 70% Grasa / 10% Carbohidratos)</option>
+            <option value="low_carb">Baja Carbohidratos (35% Proteína / 40% Grasa / 25% Carbohidratos)</option>
+            <option value="custom">Personalizada</option>
+          </select>
+
+          {profile.macroDistribution?.type === 'custom' && (
+            <div className="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
+              <p className="text-sm font-medium text-gray-700 mb-2">Configuración Personalizada (%)</p>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Proteína (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={customMacros.protein}
+                  onChange={(e) => {
+                    const protein = parseInt(e.target.value) || 0;
+                    const remaining = 100 - protein;
+                    const fat = Math.min(customMacros.fat, remaining);
+                    const carbs = remaining - fat;
+                    setCustomMacros({ protein, fat, carbs });
+                    setProfile({
+                      ...profile,
+                      macroDistribution: {
+                        type: 'custom',
+                        proteinPercent: protein,
+                        fatPercent: fat,
+                        carbsPercent: carbs,
+                      },
+                    });
+                  }}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Grasa (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={customMacros.fat}
+                  onChange={(e) => {
+                    const fat = parseInt(e.target.value) || 0;
+                    const remaining = 100 - customMacros.protein;
+                    const adjustedFat = Math.min(fat, remaining);
+                    const carbs = remaining - adjustedFat;
+                    setCustomMacros({ ...customMacros, fat: adjustedFat, carbs });
+                    setProfile({
+                      ...profile,
+                      macroDistribution: {
+                        type: 'custom',
+                        proteinPercent: customMacros.protein,
+                        fatPercent: adjustedFat,
+                        carbsPercent: carbs,
+                      },
+                    });
+                  }}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Carbohidratos (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={customMacros.carbs}
+                  readOnly
+                  className="w-full border rounded px-3 py-2 bg-gray-100"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Calculado automáticamente: {customMacros.carbs}%
+                </p>
+              </div>
+              <div className="pt-2 border-t">
+                <p className="text-xs text-gray-600">
+                  Total: <span className="font-semibold">{customMacros.protein + customMacros.fat + customMacros.carbs}%</span>
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Results Section */}
@@ -411,6 +586,16 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
                     {calculation.macros.protein}
                   </p>
                   <p className="text-sm text-gray-500 mt-1">g</p>
+                  {profile.macroDistribution && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      {(() => {
+                        const dist = profile.macroDistribution.type === 'custom' && profile.macroDistribution.proteinPercent
+                          ? { protein: profile.macroDistribution.proteinPercent, fat: profile.macroDistribution.fatPercent || 0, carbs: profile.macroDistribution.carbsPercent || 0 }
+                          : getMacroDistribution(profile.macroDistribution.type);
+                        return `${dist.protein}%`;
+                      })()}
+                    </p>
+                  )}
                 </div>
                 <div className="bg-white border-2 border-gray-200 rounded-lg p-4 text-center shadow-sm">
                   <p className="text-sm font-medium text-gray-600 mb-2">Carbohidratos</p>
@@ -418,6 +603,16 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
                     {calculation.macros.carbs}
                   </p>
                   <p className="text-sm text-gray-500 mt-1">g</p>
+                  {profile.macroDistribution && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      {(() => {
+                        const dist = profile.macroDistribution.type === 'custom' && profile.macroDistribution.proteinPercent
+                          ? { protein: profile.macroDistribution.proteinPercent, fat: profile.macroDistribution.fatPercent || 0, carbs: profile.macroDistribution.carbsPercent || 0 }
+                          : getMacroDistribution(profile.macroDistribution.type);
+                        return `${dist.carbs}%`;
+                      })()}
+                    </p>
+                  )}
                 </div>
                 <div className="bg-white border-2 border-gray-200 rounded-lg p-4 text-center shadow-sm">
                   <p className="text-sm font-medium text-gray-600 mb-2">Grasa</p>
@@ -425,6 +620,16 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
                     {calculation.macros.fat}
                   </p>
                   <p className="text-sm text-gray-500 mt-1">g</p>
+                  {profile.macroDistribution && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      {(() => {
+                        const dist = profile.macroDistribution.type === 'custom' && profile.macroDistribution.proteinPercent
+                          ? { protein: profile.macroDistribution.proteinPercent, fat: profile.macroDistribution.fatPercent || 0, carbs: profile.macroDistribution.carbsPercent || 0 }
+                          : getMacroDistribution(profile.macroDistribution.type);
+                        return `${dist.fat}%`;
+                      })()}
+                    </p>
+                  )}
                 </div>
               </div>
 

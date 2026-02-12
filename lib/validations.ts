@@ -59,6 +59,13 @@ export const profileSchema = z.object({
   heightCm: z.number().min(100).max(250).optional(),
   activityLevel: z.enum(['sedentary', 'lightly_active', 'moderately_active', 'very_active', 'extremely_active']).optional(),
   goal: z.enum(['cut', 'maintain', 'bulk']).optional(),
+  cutIntensity: z.enum(['gentle', 'moderate', 'aggressive']).optional(),
+  macroDistribution: z.object({
+    type: z.enum(['balanced', 'high_protein', 'keto', 'low_carb', 'custom']).optional(),
+    proteinPercent: z.number().min(0).max(100).optional(),
+    fatPercent: z.number().min(0).max(100).optional(),
+    carbsPercent: z.number().min(0).max(100).optional(),
+  }).optional(),
 });
 
 // Settings validations

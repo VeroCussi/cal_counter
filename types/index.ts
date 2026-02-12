@@ -1,11 +1,23 @@
 // Shared TypeScript types
 
+export type MacroDistributionType = 'balanced' | 'high_protein' | 'keto' | 'low_carb' | 'custom';
+export type CutIntensity = 'gentle' | 'moderate' | 'aggressive';
+
+export interface MacroDistribution {
+  type: MacroDistributionType;
+  proteinPercent?: number;  // For custom distribution
+  fatPercent?: number;      // For custom distribution
+  carbsPercent?: number;    // For custom distribution (calculated if not provided)
+}
+
 export interface UserProfile {
   age?: number;
   gender?: 'male' | 'female';
   heightCm?: number;
   activityLevel?: 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active' | 'extremely_active';
   goal?: 'cut' | 'maintain' | 'bulk';
+  cutIntensity?: CutIntensity;  // Only used when goal is 'cut'
+  macroDistribution?: MacroDistribution;
 }
 
 export interface MacroCalculationResult {

@@ -1,4 +1,4 @@
-import { MacroCalculationResult, UserProfile } from '@/types';
+import { MacroCalculationResult, UserProfile, MacroDistributionType, CutIntensity } from '@/types';
 
 /**
  * Activity level multipliers for TDEE calculation
@@ -12,10 +12,27 @@ const ACTIVITY_MULTIPLIERS = {
 } as const;
 
 /**
- * Calorie adjustments based on goal
+ * Predefined macro distributions (as percentages of total calories)
  */
+const MACRO_DISTRIBUTIONS: Record<MacroDistributionType, { protein: number; fat: number; carbs: number }> = {
+  balanced: { protein: 30, fat: 30, carbs: 40 },        // 30/30/40
+  high_protein: { protein: 40, fat: 30, carbs: 30 },    // 40/30/30
+  keto: { protein: 20, fat: 70, carbs: 10 },            // 20/70/10 (keto)
+  low_carb: { protein: 35, fat: 40, carbs: 25 },        // 35/40/25
+  custom: { protein: 0, fat: 0, carbs: 0 },             // Will be overridden by user input
+};
+
+/**
+ * Calorie adjustments based on goal and cut intensity
+ */
+const CUT_INTENSITY_ADJUSTMENTS = {
+  gentle: -250,      // Suave: ~0.25 kg/semana
+  moderate: -400,    // Moderado: ~0.4 kg/semana
+  aggressive: -550,  // Rápido: -500 a -600 kcal/día (promedio -550)
+} as const;
+
 const GOAL_ADJUSTMENTS = {
-  cut: -500,    // Deficit for weight loss
+  cut: -250,    // Default gentle cut (will be overridden by cutIntensity)
   maintain: 0,  // No change
   bulk: 500,    // Surplus for weight gain
 } as const;
@@ -59,18 +76,60 @@ export function calculateTDEE(
  * Calculate target calories based on TDEE and goal
  * @param tdee Total Daily Energy Expenditure
  * @param goal Goal type (cut/maintain/bulk)
+ * @param cutIntensity Intensity of weight loss (only used when goal is 'cut')
  * @returns Target calories per day
  */
 export function calculateTargetCalories(
   tdee: number,
-  goal: keyof typeof GOAL_ADJUSTMENTS
+  goal: keyof typeof GOAL_ADJUSTMENTS,
+  cutIntensity: 'gentle' | 'moderate' | 'aggressive' = 'gentle'
 ): number {
-  const adjustment = GOAL_ADJUSTMENTS[goal];
+  let adjustment: number;
+  
+  if (goal === 'cut') {
+    adjustment = CUT_INTENSITY_ADJUSTMENTS[cutIntensity];
+  } else {
+    adjustment = GOAL_ADJUSTMENTS[goal];
+  }
+  
   return Math.max(1200, Math.round(tdee + adjustment)); // Minimum 1200 kcal for safety
 }
 
 /**
- * Calculate macronutrient distribution
+ * Calculate macronutrient distribution based on percentage distribution
+ * @param targetCalories Target daily calories
+ * @param distribution Macro distribution percentages
+ * @returns Object with protein, carbs, and fat in grams
+ */
+export function calculateMacrosByDistribution(
+  targetCalories: number,
+  distribution: { protein: number; fat: number; carbs: number }
+): { protein: number; carbs: number; fat: number } {
+  // Normalize percentages to ensure they sum to 100%
+  const total = distribution.protein + distribution.fat + distribution.carbs;
+  const normalizedProtein = distribution.protein / total;
+  const normalizedFat = distribution.fat / total;
+  const normalizedCarbs = distribution.carbs / total;
+
+  // Calculate calories for each macro
+  const proteinCalories = Math.round(targetCalories * normalizedProtein);
+  const fatCalories = Math.round(targetCalories * normalizedFat);
+  const carbsCalories = targetCalories - proteinCalories - fatCalories; // Use remaining to ensure exact total
+
+  // Convert to grams (protein and carbs: 4 cal/g, fat: 9 cal/g)
+  const proteinGrams = Math.round(proteinCalories / 4);
+  const fatGrams = Math.round(fatCalories / 9);
+  const carbsGrams = Math.max(0, Math.round(carbsCalories / 4));
+
+  return {
+    protein: proteinGrams,
+    carbs: carbsGrams,
+    fat: fatGrams,
+  };
+}
+
+/**
+ * Calculate macronutrient distribution (legacy method - kept for backward compatibility)
  * @param targetCalories Target daily calories
  * @param weightKg Weight in kilograms
  * @param proteinPerKg Protein per kg of body weight (default 2.0)
@@ -100,6 +159,16 @@ export function calculateMacros(
     carbs: carbsGrams,
     fat: fatGrams,
   };
+}
+
+/**
+ * Get macro distribution percentages based on type
+ */
+export function getMacroDistribution(type: MacroDistributionType, custom?: { protein: number; fat: number; carbs: number }): { protein: number; fat: number; carbs: number } {
+  if (type === 'custom' && custom) {
+    return custom;
+  }
+  return MACRO_DISTRIBUTIONS[type];
 }
 
 /**
@@ -141,8 +210,30 @@ export function calculateMacrosFromProfile(
 
   const bmr = calculateBMR(weightKg, profile.heightCm, profile.age, profile.gender);
   const tdee = calculateTDEE(bmr, profile.activityLevel);
-  const targetCalories = calculateTargetCalories(tdee, profile.goal);
-  const macros = calculateMacros(targetCalories, weightKg, proteinPerKg, fatPercentage);
+  // Only use cutIntensity when goal is 'cut', default to 'gentle'
+  const cutIntensity = profile.goal === 'cut' ? (profile.cutIntensity || 'gentle') : 'gentle';
+  const targetCalories = calculateTargetCalories(tdee, profile.goal, cutIntensity);
+
+  // Use distribution-based calculation
+  let macros;
+  const distributionType = profile.macroDistribution?.type || 'balanced';
+  
+  if (distributionType === 'custom' && 
+      profile.macroDistribution?.proteinPercent !== undefined && 
+      profile.macroDistribution?.fatPercent !== undefined) {
+    // Custom distribution
+    const carbsPercent = profile.macroDistribution.carbsPercent || 
+      (100 - profile.macroDistribution.proteinPercent - profile.macroDistribution.fatPercent);
+    macros = calculateMacrosByDistribution(targetCalories, {
+      protein: profile.macroDistribution.proteinPercent,
+      fat: profile.macroDistribution.fatPercent,
+      carbs: carbsPercent,
+    });
+  } else {
+    // Use predefined distribution (defaults to 'balanced' if not specified)
+    const distribution = getMacroDistribution(distributionType);
+    macros = calculateMacrosByDistribution(targetCalories, distribution);
+  }
 
   return {
     bmr: Math.round(bmr),
