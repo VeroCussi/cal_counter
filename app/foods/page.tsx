@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 import { FoodSearchModal } from '@/components/food/FoodSearchModal';
 import { Food } from '@/types';
+import { OfflineService } from '@/lib/offline-service';
 
 export default function FoodsPage() {
   const { user, loading } = useAuth();
@@ -20,13 +21,13 @@ export default function FoodsPage() {
   }, [user]);
 
   const loadFoods = async () => {
+    if (!user) return;
+    
     try {
       setLoadingFoods(true);
-      const res = await fetch('/api/foods');
-      if (res.ok) {
-        const data = await res.json();
-        setFoods(data.foods || []);
-      }
+      // Use offline-first service
+      const loadedFoods = await OfflineService.loadFoods(user._id, 'all');
+      setFoods(loadedFoods);
     } catch (error) {
       console.error('Error loading foods:', error);
     } finally {

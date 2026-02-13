@@ -45,11 +45,16 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
 
   const loadFavorites = async () => {
     try {
-      const res = await fetch('/api/foods');
-      if (res.ok) {
-        const data = await res.json();
-        setFavorites(data.foods || []);
-      }
+      // Get user ID
+      const authRes = await fetch('/api/auth/me');
+      if (!authRes.ok) return;
+      const authData = await authRes.json();
+      if (!authData?.user?._id) return;
+
+      // Use offline-first service
+      const { OfflineService } = await import('@/lib/offline-service');
+      const foods = await OfflineService.loadFoods(authData.user._id, 'all');
+      setFavorites(foods);
     } catch (error) {
       console.error('Error loading favorites:', error);
     }
@@ -190,24 +195,43 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
         return;
       }
 
-      // Save to favorites first, then select
-      const res = await fetch('/api/foods', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: productWithMacros.name,
-          brand: productWithMacros.brand,
-          serving: { type: 'per100g' },
-          macros: productWithMacros.macros,
-          source: productWithMacros.source,
-          externalId: productWithMacros.externalId,
-          barcode: productWithMacros.barcode,
-        }),
+      // Get user ID from localStorage or context (we'll need to pass it as prop)
+      // For now, try to get from auth context
+      const authRes = await fetch('/api/auth/me');
+      if (!authRes.ok) {
+        setError('No autenticado');
+        return;
+      }
+      const authData = await authRes.json();
+      const userId = authData.user?._id;
+      
+      if (!userId) {
+        setError('No se pudo obtener el ID de usuario');
+        return;
+      }
+
+      // Use offline-first service
+      const { OfflineService } = await import('@/lib/offline-service');
+      const result = await OfflineService.createFood(userId, {
+        name: productWithMacros.name,
+        brand: productWithMacros.brand,
+        serving: { type: 'per100g' },
+        macros: productWithMacros.macros,
+        source: productWithMacros.source,
+        externalId: productWithMacros.externalId,
+        barcode: productWithMacros.barcode,
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        onSelectFood(data.food);
+      // Try to sync if online
+      if (navigator.onLine && !result.synced) {
+        const { syncService } = await import('@/lib/sync/sync-service');
+        syncService.sync(userId).catch((err) => {
+          console.error('Sync error:', err);
+        });
+      }
+
+      if (result.food) {
+        onSelectFood(result.food);
         onClose();
       } else {
         setError('Error al guardar alimento');

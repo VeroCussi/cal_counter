@@ -3,10 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Food } from '@/types';
+import { useAuth } from '@/hooks/useAuth';
+import { OfflineService } from '@/lib/offline-service';
 
 export default function EditFoodPage() {
   const router = useRouter();
   const params = useParams();
+  const { user } = useAuth();
   const foodId = params.id as string;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -26,23 +29,23 @@ export default function EditFoodPage() {
   }, [foodId]);
 
   const loadFood = async () => {
+    if (!user) return;
+    
     try {
-      const res = await fetch('/api/foods');
-      if (res.ok) {
-        const data = await res.json();
-        const food = data.foods.find((f: Food) => f._id === foodId);
-        if (food) {
-          setFormData({
-            name: food.name,
-            brand: food.brand || '',
-            servingType: food.serving.type,
-            servingSizeG: food.serving.servingSizeG?.toString() || '',
-            kcal: food.macros.kcal.toString(),
-            protein: food.macros.protein.toString(),
-            carbs: food.macros.carbs.toString(),
-            fat: food.macros.fat.toString(),
-          });
-        }
+      // Use offline-first service
+      const foods = await OfflineService.loadFoods(user._id, 'all');
+      const food = foods.find((f: Food) => f._id === foodId);
+      if (food) {
+        setFormData({
+          name: food.name,
+          brand: food.brand || '',
+          servingType: food.serving.type === 'perServing' ? 'perServing' : (food.serving.type === 'per100ml' ? 'per100g' : 'per100g'),
+          servingSizeG: food.serving.servingSizeG?.toString() || '',
+          kcal: food.macros.kcal.toString(),
+          protein: food.macros.protein.toString(),
+          carbs: food.macros.carbs.toString(),
+          fat: food.macros.fat.toString(),
+        });
       }
     } catch (error) {
       console.error('Error loading food:', error);
@@ -60,62 +63,66 @@ export default function EditFoodPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+    
     setSaving(true);
 
     try {
-      const res = await fetch(`/api/foods/${foodId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          brand: formData.brand || undefined,
-          serving: {
-            type: formData.servingType,
-            servingSizeG: formData.servingType === 'perServing' ? parseFloat(formData.servingSizeG) : undefined,
-          },
-          macros: {
-            kcal: parseFloat(formData.kcal),
-            protein: parseFloat(formData.protein),
-            carbs: parseFloat(formData.carbs),
-            fat: parseFloat(formData.fat),
-          },
-          source: 'custom', // Keep original source or update as needed
-        }),
+      // Use offline-first service
+      await OfflineService.updateFood(user._id, foodId, {
+        name: formData.name,
+        brand: formData.brand || undefined,
+        serving: {
+          type: formData.servingType,
+          servingSizeG: formData.servingType === 'perServing' ? parseFloat(formData.servingSizeG) : undefined,
+        },
+        macros: {
+          kcal: parseFloat(formData.kcal),
+          protein: parseFloat(formData.protein),
+          carbs: parseFloat(formData.carbs),
+          fat: parseFloat(formData.fat),
+        },
+        source: 'custom',
       });
 
-      if (res.ok) {
-        router.push('/foods');
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Error al actualizar alimento');
+      // Try to sync if online
+      if (navigator.onLine) {
+        const { syncService } = await import('@/lib/sync/sync-service');
+        syncService.sync(user._id).catch((err) => {
+          console.error('Sync error:', err);
+        });
       }
+
+      router.push('/foods');
     } catch (error) {
       console.error('Error updating food:', error);
-      alert('Error de conexión');
+      alert('Error al actualizar alimento');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este alimento?')) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este alimento?') || !user) {
       return;
     }
 
     try {
-      const res = await fetch(`/api/foods/${foodId}`, {
-        method: 'DELETE',
-      });
+      // Use offline-first service
+      await OfflineService.deleteFood(user._id, foodId);
 
-      if (res.ok) {
-        router.push('/foods');
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Error al eliminar alimento');
+      // Try to sync if online
+      if (navigator.onLine) {
+        const { syncService } = await import('@/lib/sync/sync-service');
+        syncService.sync(user._id).catch((err) => {
+          console.error('Sync error:', err);
+        });
       }
+
+      router.push('/foods');
     } catch (error) {
       console.error('Error deleting food:', error);
-      alert('Error de conexión');
+      alert('Error al eliminar alimento');
     }
   };
 

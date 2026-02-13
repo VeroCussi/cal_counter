@@ -597,4 +597,548 @@ export class OfflineService {
       await db.water.delete(localWater.id!);
     }
   }
+
+  /**
+   * Create food offline-first
+   */
+  static async createFood(
+    userId: string,
+    foodData: {
+      name: string;
+      brand?: string;
+      serving: {
+        type: 'per100g' | 'per100ml' | 'perServing';
+        servingSizeG?: number;
+        servingSizeMl?: number;
+        baseUnit?: 'g' | 'ml';
+        customServings?: Array<{ id: string; label: string; value: number }>;
+      };
+      macros: {
+        kcal: number;
+        protein: number;
+        carbs: number;
+        fat: number;
+      };
+      source: 'custom' | 'openfoodfacts' | 'usda';
+      externalId?: string;
+      barcode?: string;
+    }
+  ): Promise<{ localId: number; synced: boolean; food?: Food }> {
+    // 1. Write to IndexedDB first
+    const localFood: Omit<LocalFood, 'id'> = {
+      ownerUserId: userId,
+      name: foodData.name,
+      brand: foodData.brand,
+      serving: foodData.serving,
+      macros: foodData.macros,
+      source: foodData.source,
+      externalId: foodData.externalId,
+      barcode: foodData.barcode,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      synced: false,
+    };
+
+    const localId = await db.foods.add(localFood as LocalFood);
+
+    // 2. Try to sync immediately if online
+    if (navigator.onLine) {
+      try {
+        const res = await fetch('/api/foods', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(foodData),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const serverFood = data.food;
+
+          // Update local with server _id
+          await db.foods.update(localId, {
+            _id: serverFood._id,
+            synced: true,
+            updatedAt: new Date(),
+          });
+
+          return { localId, synced: true, food: serverFood };
+        }
+      } catch (error) {
+        console.error('Sync food error:', error);
+      }
+    }
+
+    // 3. Add to outbox for later sync
+    await syncService.addToOutbox(userId, 'food', 'create', foodData, localId);
+
+    // Return local food object
+    const createdFood: Food = {
+      _id: `local-${localId}`,
+      ownerUserId: userId,
+      name: foodData.name,
+      brand: foodData.brand,
+      serving: foodData.serving,
+      macros: foodData.macros,
+      source: foodData.source,
+      externalId: foodData.externalId,
+      barcode: foodData.barcode,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    return { localId, synced: false, food: createdFood };
+  }
+
+  /**
+   * Update food offline-first
+   */
+  static async updateFood(
+    userId: string,
+    foodId: string,
+    foodData: {
+      name: string;
+      brand?: string;
+      serving: {
+        type: 'per100g' | 'per100ml' | 'perServing';
+        servingSizeG?: number;
+        servingSizeMl?: number;
+        baseUnit?: 'g' | 'ml';
+        customServings?: Array<{ id: string; label: string; value: number }>;
+      };
+      macros: {
+        kcal: number;
+        protein: number;
+        carbs: number;
+        fat: number;
+      };
+      source?: 'custom' | 'openfoodfacts' | 'usda';
+    }
+  ): Promise<void> {
+    // 1. Update in IndexedDB
+    const localFood = await db.foods.where('_id').equals(foodId).first();
+    
+    if (localFood) {
+      await db.foods.update(localFood.id!, {
+        name: foodData.name,
+        brand: foodData.brand,
+        serving: foodData.serving,
+        macros: foodData.macros,
+        source: foodData.source || localFood.source,
+        updatedAt: new Date(),
+        synced: false,
+      });
+    }
+
+    // 2. Try to sync immediately if online
+    if (navigator.onLine) {
+      try {
+        const res = await fetch(`/api/foods/${foodId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(foodData),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const serverFood = data.food;
+
+          // Update local with server data
+          if (localFood) {
+            await db.foods.update(localFood.id!, {
+              _id: serverFood._id,
+              synced: true,
+              updatedAt: new Date(),
+            });
+          }
+        } else {
+          // API failed, add to outbox
+          await syncService.addToOutbox(userId, 'food', 'update', { _id: foodId, ...foodData });
+        }
+      } catch (error) {
+        // Network error, add to outbox
+        await syncService.addToOutbox(userId, 'food', 'update', { _id: foodId, ...foodData });
+      }
+    } else {
+      // Offline, add to outbox
+      await syncService.addToOutbox(userId, 'food', 'update', { _id: foodId, ...foodData });
+    }
+  }
+
+  /**
+   * Delete food offline-first
+   */
+  static async deleteFood(userId: string, foodId: string): Promise<void> {
+    // 1. Delete from IndexedDB (or mark as deleted)
+    const localFood = await db.foods.where('_id').equals(foodId).first();
+    
+    if (localFood) {
+      // If synced, keep record but mark for deletion
+      if (localFood.synced) {
+        await db.foods.update(localFood.id!, {
+          synced: false,
+          updatedAt: new Date(),
+        });
+      } else {
+        // If not synced, delete completely
+        await db.foods.delete(localFood.id!);
+      }
+    }
+
+    // 2. Try to sync immediately if online
+    if (navigator.onLine) {
+      try {
+        const res = await fetch(`/api/foods/${foodId}`, {
+          method: 'DELETE',
+        });
+
+        if (res.ok) {
+          // Successfully deleted from server
+          if (localFood) {
+            await db.foods.delete(localFood.id!);
+          }
+        } else {
+          // API failed, add to outbox
+          await syncService.addToOutbox(userId, 'food', 'delete', { _id: foodId });
+        }
+      } catch (error) {
+        // Network error, add to outbox
+        await syncService.addToOutbox(userId, 'food', 'delete', { _id: foodId });
+      }
+    } else {
+      // Offline, add to outbox
+      await syncService.addToOutbox(userId, 'food', 'delete', { _id: foodId });
+    }
+  }
+
+  /**
+   * Load foods from IndexedDB, merge with server data
+   */
+  static async loadFoods(userId: string, filter?: 'all' | 'mine' | 'shared'): Promise<Food[]> {
+    // 1. Load from IndexedDB
+    const localFoods = await db.foods
+      .where('ownerUserId')
+      .equals(userId)
+      .toArray();
+
+    // 2. Try to load from server if online
+    if (navigator.onLine) {
+      try {
+        const filterParam = filter || 'all';
+        const res = await fetch(`/api/foods?filter=${filterParam}`);
+        if (res.ok) {
+          const data = await res.json();
+          const serverFoods = data.foods || [];
+
+          // Merge: server foods take precedence (last-write-wins)
+          const mergedFoods: Food[] = [];
+          const serverFoodMap = new Map(serverFoods.map((f: any) => [f._id, f]));
+
+          // Add/update local foods with server data
+          for (const localFood of localFoods) {
+            if (localFood._id && serverFoodMap.has(localFood._id)) {
+              // Server has this food, use server version
+              const serverFood: any = serverFoodMap.get(localFood._id);
+              mergedFoods.push({
+                _id: serverFood._id,
+                ownerUserId: serverFood.ownerUserId || userId,
+                name: serverFood.name,
+                brand: serverFood.brand,
+                serving: serverFood.serving,
+                macros: serverFood.macros,
+                source: serverFood.source,
+                externalId: serverFood.externalId,
+                barcode: serverFood.barcode,
+                createdAt: new Date(serverFood.createdAt),
+                updatedAt: new Date(serverFood.updatedAt),
+              });
+
+              // Update local if needed
+              if (!localFood.synced) {
+                await db.foods.update(localFood.id!, {
+                  synced: true,
+                  updatedAt: new Date(serverFood.updatedAt),
+                });
+              }
+            } else if (!localFood.synced) {
+              // Local food not synced yet, include it
+              mergedFoods.push({
+                _id: localFood._id || `local-${localFood.id}`,
+                ownerUserId: localFood.ownerUserId,
+                name: localFood.name,
+                brand: localFood.brand,
+                serving: localFood.serving,
+                macros: localFood.macros,
+                source: localFood.source,
+                externalId: localFood.externalId,
+                barcode: localFood.barcode,
+                createdAt: localFood.createdAt,
+                updatedAt: localFood.updatedAt,
+              });
+            }
+          }
+
+          // Add server foods not in local
+          for (const serverFoodRaw of serverFoods) {
+            const serverFood: any = serverFoodRaw;
+            if (!localFoods.find((lf) => lf._id === serverFood._id)) {
+              mergedFoods.push({
+                _id: serverFood._id,
+                ownerUserId: serverFood.ownerUserId || userId,
+                name: serverFood.name,
+                brand: serverFood.brand,
+                serving: serverFood.serving,
+                macros: serverFood.macros,
+                source: serverFood.source,
+                externalId: serverFood.externalId,
+                barcode: serverFood.barcode,
+                createdAt: new Date(serverFood.createdAt),
+                updatedAt: new Date(serverFood.updatedAt),
+              });
+
+              // Save to local
+              try {
+                await db.foods.add({
+                  _id: serverFood._id,
+                  ownerUserId: userId,
+                  name: serverFood.name,
+                  brand: serverFood.brand,
+                  serving: serverFood.serving,
+                  macros: serverFood.macros,
+                  source: serverFood.source,
+                  externalId: serverFood.externalId,
+                  barcode: serverFood.barcode,
+                  createdAt: new Date(serverFood.createdAt),
+                  updatedAt: new Date(serverFood.updatedAt),
+                  synced: true,
+                });
+              } catch (error) {
+                // Food might already exist, try to update instead
+                const existing = await db.foods.where('_id').equals(serverFood._id).first();
+                if (existing) {
+                  await db.foods.update(existing.id!, {
+                    synced: true,
+                    updatedAt: new Date(serverFood.updatedAt),
+                  });
+                }
+              }
+            }
+          }
+
+          return mergedFoods;
+        }
+      } catch (error) {
+        console.error('Error loading from server, using local:', error);
+      }
+    }
+
+    // Return local foods only (offline or server error)
+    return localFoods.map((lf) => ({
+      _id: lf._id || `local-${lf.id}`,
+      ownerUserId: lf.ownerUserId,
+      name: lf.name,
+      brand: lf.brand,
+      serving: lf.serving,
+      macros: lf.macros,
+      source: lf.source,
+      externalId: lf.externalId,
+      barcode: lf.barcode,
+      createdAt: lf.createdAt,
+      updatedAt: lf.updatedAt,
+    }));
+  }
+
+  /**
+   * Create weight entry offline-first
+   */
+  static async createWeight(
+    userId: string,
+    weightData: {
+      date: string;
+      weightKg: number;
+    }
+  ): Promise<{ localId: number; synced: boolean; weight?: WeightEntry }> {
+    // 1. Write to IndexedDB first
+    const localWeight: Omit<LocalWeight, 'id'> = {
+      ownerUserId: userId,
+      date: weightData.date,
+      weightKg: weightData.weightKg,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      synced: false,
+    };
+
+    const localId = await db.weights.add(localWeight as LocalWeight);
+
+    // 2. Try to sync immediately if online
+    if (navigator.onLine) {
+      try {
+        const res = await fetch('/api/weights', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(weightData),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const serverWeight = data.weight;
+
+          // Update local with server _id
+          await db.weights.update(localId, {
+            _id: serverWeight._id,
+            synced: true,
+            updatedAt: new Date(),
+          });
+
+          return { localId, synced: true, weight: serverWeight };
+        }
+      } catch (error) {
+        console.error('Sync weight error:', error);
+      }
+    }
+
+    // 3. Add to outbox for later sync
+    await syncService.addToOutbox(userId, 'weight', 'create', weightData, localId);
+
+    // Return local weight object
+    const createdWeight: WeightEntry = {
+      _id: `local-${localId}`,
+      ownerUserId: userId,
+      date: weightData.date,
+      weightKg: weightData.weightKg,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    return { localId, synced: false, weight: createdWeight };
+  }
+
+  /**
+   * Load weights from IndexedDB, merge with server data
+   */
+  static async loadWeights(
+    userId: string,
+    fromDate?: string,
+    toDate?: string
+  ): Promise<WeightEntry[]> {
+    // 1. Load from IndexedDB
+    let localWeights = await db.weights
+      .where('ownerUserId')
+      .equals(userId)
+      .toArray();
+
+    // Filter by date range if provided
+    if (fromDate || toDate) {
+      localWeights = localWeights.filter((w) => {
+        if (fromDate && w.date < fromDate) return false;
+        if (toDate && w.date > toDate) return false;
+        return true;
+      });
+    }
+
+    // 2. Try to load from server if online
+    if (navigator.onLine) {
+      try {
+        const today = new Date();
+        const from = fromDate || new Date(today.getFullYear(), today.getMonth(), today.getDate() - 90).toISOString().split('T')[0];
+        const to = toDate || today.toISOString().split('T')[0];
+
+        const res = await fetch(`/api/weights?from=${from}&to=${to}`);
+        if (res.ok) {
+          const data = await res.json();
+          const serverWeights = data.weights || [];
+
+          // Merge: server weights take precedence (last-write-wins)
+          const mergedWeights: WeightEntry[] = [];
+          const serverWeightMap = new Map(serverWeights.map((w: any) => [w._id, w]));
+
+          // Add/update local weights with server data
+          for (const localWeight of localWeights) {
+            if (localWeight._id && serverWeightMap.has(localWeight._id)) {
+              // Server has this weight, use server version
+              const serverWeight: any = serverWeightMap.get(localWeight._id);
+              mergedWeights.push({
+                _id: serverWeight._id,
+                ownerUserId: serverWeight.ownerUserId || userId,
+                date: serverWeight.date,
+                weightKg: serverWeight.weightKg,
+                createdAt: new Date(serverWeight.createdAt),
+                updatedAt: new Date(serverWeight.updatedAt),
+              });
+
+              // Update local if needed
+              if (!localWeight.synced) {
+                await db.weights.update(localWeight.id!, {
+                  synced: true,
+                  updatedAt: new Date(serverWeight.updatedAt),
+                });
+              }
+            } else if (!localWeight.synced) {
+              // Local weight not synced yet, include it
+              mergedWeights.push({
+                _id: localWeight._id || `local-${localWeight.id}`,
+                ownerUserId: localWeight.ownerUserId,
+                date: localWeight.date,
+                weightKg: localWeight.weightKg,
+                createdAt: localWeight.createdAt,
+                updatedAt: localWeight.updatedAt,
+              });
+            }
+          }
+
+          // Add server weights not in local
+          for (const serverWeightRaw of serverWeights) {
+            const serverWeight: any = serverWeightRaw;
+            if (!localWeights.find((lw) => lw._id === serverWeight._id)) {
+              mergedWeights.push({
+                _id: serverWeight._id,
+                ownerUserId: serverWeight.ownerUserId || userId,
+                date: serverWeight.date,
+                weightKg: serverWeight.weightKg,
+                createdAt: new Date(serverWeight.createdAt),
+                updatedAt: new Date(serverWeight.updatedAt),
+              });
+
+              // Save to local
+              try {
+                await db.weights.add({
+                  _id: serverWeight._id,
+                  ownerUserId: userId,
+                  date: serverWeight.date,
+                  weightKg: serverWeight.weightKg,
+                  createdAt: new Date(serverWeight.createdAt),
+                  updatedAt: new Date(serverWeight.updatedAt),
+                  synced: true,
+                });
+              } catch (error) {
+                // Weight might already exist, try to update instead
+                const existing = await db.weights.where('_id').equals(serverWeight._id).first();
+                if (existing) {
+                  await db.weights.update(existing.id!, {
+                    synced: true,
+                    updatedAt: new Date(serverWeight.updatedAt),
+                  });
+                }
+              }
+            }
+          }
+
+          return mergedWeights.sort((a, b) => a.date.localeCompare(b.date));
+        }
+      } catch (error) {
+        console.error('Error loading from server, using local:', error);
+      }
+    }
+
+    // Return local weights only (offline or server error)
+    return localWeights
+      .map((lw) => ({
+        _id: lw._id || `local-${lw.id}`,
+        ownerUserId: lw.ownerUserId,
+        date: lw.date,
+        weightKg: lw.weightKg,
+        createdAt: lw.createdAt,
+        updatedAt: lw.updatedAt,
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
 }

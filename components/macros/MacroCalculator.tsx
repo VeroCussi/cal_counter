@@ -108,18 +108,20 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
   }, [profile, latestWeight, manualWeight, useManualWeight, units, user]);
 
   const loadLatestWeight = async () => {
+    if (!user) return;
+    
     try {
       setLoadingWeight(true);
       const today = new Date().toISOString().split('T')[0];
-      const res = await fetch(`/api/weights?to=${today}`);
-      if (res.ok) {
-        const data = await res.json();
-        const weights: WeightEntry[] = data.weights || [];
-        if (weights.length > 0) {
-          // Get most recent weight
-          const sorted = weights.sort((a, b) => b.date.localeCompare(a.date));
-          setLatestWeight(sorted[0].weightKg);
-        }
+      
+      // Use offline-first service
+      const { OfflineService } = await import('@/lib/offline-service');
+      const weights = await OfflineService.loadWeights(user._id, undefined, today);
+      
+      if (weights.length > 0) {
+        // Get most recent weight
+        const sorted = weights.sort((a, b) => b.date.localeCompare(a.date));
+        setLatestWeight(sorted[0].weightKg);
       }
     } catch (error) {
       console.error('Error loading weight:', error);

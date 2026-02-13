@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { OfflineService } from '@/lib/offline-service';
 
 interface CustomServing {
   id: string;
@@ -11,6 +13,7 @@ interface CustomServing {
 
 export default function NewFoodPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     brand: '',
@@ -101,29 +104,31 @@ export default function NewFoodPage() {
         }
       }
 
-      const res = await fetch('/api/foods', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          brand: formData.brand || undefined,
-          serving,
-          macros: {
-            kcal: parseFloat(formData.kcal),
-            protein: parseFloat(formData.protein),
-            carbs: parseFloat(formData.carbs),
-            fat: parseFloat(formData.fat),
-          },
-          source: 'custom',
-        }),
+      if (!user) return;
+
+      // Use offline-first service
+      const result = await OfflineService.createFood(user._id, {
+        name: formData.name,
+        brand: formData.brand || undefined,
+        serving,
+        macros: {
+          kcal: parseFloat(formData.kcal),
+          protein: parseFloat(formData.protein),
+          carbs: parseFloat(formData.carbs),
+          fat: parseFloat(formData.fat),
+        },
+        source: 'custom',
       });
 
-      if (res.ok) {
-        router.push('/foods');
-      } else {
-        const error = await res.json();
-        alert(error.error || 'Error al crear alimento');
+      // Try to sync if online
+      if (navigator.onLine && !result.synced) {
+        const { syncService } = await import('@/lib/sync/sync-service');
+        syncService.sync(user._id).catch((err) => {
+          console.error('Sync error:', err);
+        });
       }
+
+      router.push('/foods');
     } catch (error) {
       console.error('Error creating food:', error);
       alert('Error al crear alimento');

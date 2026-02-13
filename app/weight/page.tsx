@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { BottomNavigation } from '@/components/navigation/BottomNavigation';
 import { WeightChart } from '@/components/weight/WeightChart';
+import { OfflineService } from '@/lib/offline-service';
 
 interface WeightEntry {
   _id: string;
@@ -24,19 +25,19 @@ export default function WeightPage() {
   }, [user]);
 
   const loadWeights = async () => {
+    if (!user) return;
+    
     try {
       setLoadingWeights(true);
       const today = new Date();
-      const thirtyDaysAgo = new Date(today);
-      thirtyDaysAgo.setDate(today.getDate() - 90);
-      const from = thirtyDaysAgo.toISOString().split('T')[0];
+      const ninetyDaysAgo = new Date(today);
+      ninetyDaysAgo.setDate(today.getDate() - 90);
+      const from = ninetyDaysAgo.toISOString().split('T')[0];
       const to = today.toISOString().split('T')[0];
 
-      const res = await fetch(`/api/weights?from=${from}&to=${to}`);
-      if (res.ok) {
-        const data = await res.json();
-        setWeights(data.weights || []);
-      }
+      // Use offline-first service
+      const loadedWeights = await OfflineService.loadWeights(user._id, from, to);
+      setWeights(loadedWeights);
     } catch (error) {
       console.error('Error loading weights:', error);
     } finally {
@@ -46,24 +47,30 @@ export default function WeightPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+    
     const weight = parseFloat(todayWeight);
     if (isNaN(weight) || weight <= 0) return;
 
     try {
       const today = new Date().toISOString().split('T')[0];
-      const res = await fetch('/api/weights', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          date: today,
-          weightKg: weight,
-        }),
+      
+      // Use offline-first service
+      const result = await OfflineService.createWeight(user._id, {
+        date: today,
+        weightKg: weight,
       });
 
-      if (res.ok) {
-        setTodayWeight('');
-        loadWeights();
+      // Try to sync if online
+      if (navigator.onLine && !result.synced) {
+        const { syncService } = await import('@/lib/sync/sync-service');
+        syncService.sync(user._id).catch((err) => {
+          console.error('Sync error:', err);
+        });
       }
+
+      setTodayWeight('');
+      loadWeights();
     } catch (error) {
       console.error('Error saving weight:', error);
     }
