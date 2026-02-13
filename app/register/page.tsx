@@ -28,10 +28,20 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      // Only include PIN if provided
+      const registerData: any = {
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+      };
+      if (formData.pin && formData.pin.length >= 4) {
+        registerData.pin = formData.pin;
+      }
+
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(registerData),
       });
 
       let data;
@@ -131,7 +141,7 @@ export default function RegisterPage() {
             </div>
             <div>
               <label htmlFor="pin" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                PIN (4-6 dígitos)
+                PIN (opcional, 4-6 dígitos)
               </label>
               <input
                 id="pin"
@@ -139,15 +149,14 @@ export default function RegisterPage() {
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]{4,6}"
-                required
                 maxLength={6}
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="1234"
+                placeholder="1234 (opcional)"
                 value={formData.pin}
                 onChange={handleChange}
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Usado para bloqueo rápido de la app
+                Opcional: Usado para bloqueo rápido de la app. Puedes configurarlo más tarde en Ajustes.
               </p>
             </div>
           </div>

@@ -12,6 +12,7 @@ import { useToastContext } from '@/components/ui/ToastContainer';
 import { BottomNavigation } from '@/components/navigation/BottomNavigation';
 import { AddWaterModal } from '@/components/water/AddWaterModal';
 import { WaterTracker } from '@/components/water/WaterTracker';
+import { DateSelector } from '@/components/ui/DateSelector';
 
 const mealTypes = [
   { key: 'breakfast', label: 'Desayuno' },
@@ -140,14 +141,9 @@ export default function TodayPage() {
         <div className="mb-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Hoy</h1>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               {user && <SyncButton userId={user._id} />}
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-              />
+              <DateSelector value={date} onChange={setDate} />
             </div>
           </div>
           <p className="text-gray-600 dark:text-gray-300">{formatDate(date)}</p>

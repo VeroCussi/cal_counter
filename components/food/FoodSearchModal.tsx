@@ -29,6 +29,7 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'favorites' | 'off' | 'usda'>('favorites');
   const [searchQuery, setSearchQuery] = useState('');
+  const [barcodeQuery, setBarcodeQuery] = useState('');
   const [favorites, setFavorites] = useState<Food[]>([]);
   const [offResults, setOffResults] = useState<ExternalProduct[]>([]);
   const [usdaResults, setUsdaResults] = useState<ExternalProduct[]>([]);
@@ -51,6 +52,44 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
       }
     } catch (error) {
       console.error('Error loading favorites:', error);
+    }
+  };
+
+  const searchByBarcode = async () => {
+    if (!barcodeQuery.trim()) {
+      setError('Por favor ingresa un código de barras');
+      return;
+    }
+
+    // Validate barcode format (EAN-13, EAN-8, UPC-A, etc.)
+    const barcode = barcodeQuery.trim().replace(/\D/g, ''); // Remove non-digits
+    if (barcode.length < 8 || barcode.length > 13) {
+      setError('El código de barras debe tener entre 8 y 13 dígitos');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setOffResults([]);
+    try {
+      const res = await fetch(`/api/external/off?barcode=${encodeURIComponent(barcode)}`);
+      const data = await res.json();
+      
+      if (res.ok) {
+        if (data.products && data.products.length > 0) {
+          setOffResults(data.products);
+          setActiveTab('off'); // Switch to OFF tab to show results
+        } else {
+          setError('No se encontró producto con ese código de barras');
+        }
+      } else {
+        setError(data.error || 'Error al buscar por código de barras');
+      }
+    } catch (error) {
+      console.error('Error searching by barcode:', error);
+      setError('Error de conexión');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -258,7 +297,34 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
         </div>
 
         {/* Search */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 space-y-3">
+          {/* Barcode search - shown for OFF tab */}
+          {activeTab === 'off' && (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={barcodeQuery}
+                onChange={(e) => setBarcodeQuery(e.target.value.replace(/\D/g, ''))}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    searchByBarcode();
+                  }
+                }}
+                placeholder="Código de barras (EAN/UPC)..."
+                className="flex-1 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+              />
+              <button
+                onClick={searchByBarcode}
+                disabled={loading || !barcodeQuery.trim()}
+                className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50 hover:bg-green-700"
+              >
+                {loading ? 'Buscando...' : '🔍'}
+              </button>
+            </div>
+          )}
+          
+          {/* Text search */}
           <div className="flex gap-2">
             <input
               type="text"
@@ -273,7 +339,7 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
                 activeTab === 'favorites'
                   ? 'Buscar en favoritos...'
                   : activeTab === 'off'
-                  ? 'Buscar en Open Food Facts...'
+                  ? 'Buscar por nombre en Open Food Facts...'
                   : 'Buscar en USDA...'
               }
               className="flex-1 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"

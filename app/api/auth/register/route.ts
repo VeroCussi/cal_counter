@@ -31,17 +31,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash password and PIN
+    // Hash password
     const passwordHash = await bcrypt.hash(validated.password, 10);
-    const pinHash = await bcrypt.hash(validated.pin, 10);
+    
+    // Hash PIN only if provided
+    let pinHash: string | undefined;
+    if (validated.pin) {
+      pinHash = await bcrypt.hash(validated.pin, 10);
+    }
 
     // Create user
-    const user = await User.create({
+    const userData: any = {
       email: validated.email,
       name: validated.name,
       passwordHash,
-      pinHash,
-    });
+    };
+    if (pinHash) {
+      userData.pinHash = pinHash;
+    }
+
+    const user = await User.create(userData);
 
     // Generate token and set cookie
     const token = generateToken({

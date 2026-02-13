@@ -39,8 +39,15 @@ export function PinProtection({ children }: PinProtectionProps) {
       return;
     }
 
-    // Check PIN status only if authenticated
+    // Check PIN status only if authenticated and PIN is enabled
     try {
+      // Check if user has PIN enabled (from user object)
+      if (user && !(user as any).hasPin) {
+        // PIN is disabled, skip check
+        setIsChecking(false);
+        return;
+      }
+
       const unlockedUntil = localStorage.getItem('pinUnlockedUntil');
       const now = Date.now();
 

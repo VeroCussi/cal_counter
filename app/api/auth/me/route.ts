@@ -36,12 +36,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Check if user has PIN enabled
+    const hasPin = !!user.pinHash;
+
     return NextResponse.json({
       user: {
         _id: user._id.toString(),
         email: user.email,
         name: user.name,
         settings: user.settings,
+        hasPin, // Include PIN status
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
