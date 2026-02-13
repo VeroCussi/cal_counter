@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { BottomNavigation } from '@/components/navigation/BottomNavigation';
 import MacroCalculator from '@/components/macros/MacroCalculator';
 
 export default function SettingsPage() {
@@ -15,11 +15,13 @@ export default function SettingsPage() {
     carbs: 200,
     fat: 65,
   });
+  const [waterGoalMl, setWaterGoalMl] = useState(2000);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (user) {
       setGoals(user.settings.goals);
+      setWaterGoalMl((user.settings as any).waterGoalMl || 2000);
     }
   }, [user]);
 
@@ -34,6 +36,7 @@ export default function SettingsPage() {
         body: JSON.stringify({
           ...user.settings,
           goals,
+          waterGoalMl,
         }),
       });
 
@@ -118,6 +121,36 @@ export default function SettingsPage() {
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 animate-fade-in transition-smooth hover:shadow-md">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Objetivo de agua</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">
+                Objetivo diario de agua (ml)
+              </label>
+              <input
+                type="number"
+                min="500"
+                max="5000"
+                step="100"
+                value={waterGoalMl}
+                onChange={(e) => setWaterGoalMl(parseInt(e.target.value) || 2000)}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Rango recomendado: 500ml - 5000ml
+              </p>
+            </div>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full px-4 py-2 bg-indigo-600 text-white rounded disabled:opacity-50"
+            >
+              {saving ? 'Guardando...' : 'Guardar'}
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 animate-fade-in transition-smooth hover:shadow-md">
           <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Cuenta</h2>
           <div className="space-y-2">
             <p className="text-sm text-gray-900 dark:text-gray-100">
@@ -140,22 +173,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-        <div className="max-w-2xl mx-auto flex justify-around">
-          <Link href="/today" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
-            Hoy
-          </Link>
-          <Link href="/foods" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
-            Alimentos
-          </Link>
-          <Link href="/weight" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
-            Peso
-          </Link>
-          <Link href="/settings" className="flex-1 py-3 text-center text-indigo-600 dark:text-indigo-400 font-medium">
-            Ajustes
-          </Link>
-        </div>
-      </nav>
+      <BottomNavigation />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { db, LocalEntry, LocalFood, LocalWeight } from './sync/dexie';
+import { db, LocalEntry, LocalFood, LocalWeight, LocalWater } from './sync/dexie';
 import { syncService } from './sync/sync-service';
 import { Food, WeightEntry } from '@/types';
 
@@ -435,5 +435,166 @@ export class OfflineService {
     }
     
     return entriesWithFoods;
+  }
+
+  /**
+   * Create water entry offline-first
+   */
+  static async createWater(
+    userId: string,
+    waterData: {
+      date: string;
+      amountMl: number;
+    }
+  ): Promise<{ localId: number; synced: boolean }> {
+    // 1. Write to IndexedDB first
+    const localWater: Omit<LocalWater, 'id'> = {
+      ownerUserId: userId,
+      date: waterData.date,
+      amountMl: waterData.amountMl,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      synced: false,
+    };
+
+    const localId = await db.water.add(localWater as LocalWater);
+
+    // 2. Try to sync immediately if online
+    if (navigator.onLine) {
+      try {
+        const res = await fetch('/api/water', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(waterData),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const serverWater = data.water;
+
+          // Update local with server _id
+          await db.water.update(localId, {
+            _id: serverWater._id,
+            synced: true,
+            updatedAt: new Date(),
+          });
+
+          return { localId, synced: true };
+        }
+      } catch (error) {
+        console.error('Sync water error:', error);
+      }
+    }
+
+    // 3. Add to outbox for later sync
+    await db.outbox.add({
+      userId,
+      entity: 'water',
+      op: 'create',
+      payload: waterData,
+      createdAt: new Date(),
+      retryCount: 0,
+    });
+
+    return { localId, synced: false };
+  }
+
+  /**
+   * Load water entries for a specific date
+   */
+  static async loadWater(userId: string, date: string): Promise<number> {
+    // 1. Load from IndexedDB
+    const localWaterEntries = await db.water
+      .where('ownerUserId')
+      .equals(userId)
+      .and((w) => w.date === date)
+      .toArray();
+
+    let totalAmount = localWaterEntries.reduce((sum, w) => sum + w.amountMl, 0);
+
+    // 2. Try to load from server if online
+    if (navigator.onLine) {
+      try {
+        const res = await fetch(`/api/water?date=${date}`);
+        if (res.ok) {
+          const data = await res.json();
+          const serverTotal = data.totalAmount || 0;
+
+          // Use server data if available
+          if (serverTotal > 0) {
+            totalAmount = serverTotal;
+            
+            // Update local entries with server data
+            const serverEntries = data.waterEntries || [];
+            for (const serverEntry of serverEntries) {
+              const existing = await db.water.where('_id').equals(serverEntry._id).first();
+              if (existing) {
+                await db.water.update(existing.id!, {
+                  amountMl: serverEntry.amountMl,
+                  synced: true,
+                  updatedAt: new Date(),
+                });
+              } else {
+                await db.water.add({
+                  _id: serverEntry._id,
+                  ownerUserId: serverEntry.ownerUserId,
+                  date: serverEntry.date,
+                  amountMl: serverEntry.amountMl,
+                  createdAt: new Date(serverEntry.createdAt),
+                  updatedAt: new Date(serverEntry.updatedAt),
+                  synced: true,
+                });
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Load water error:', error);
+      }
+    }
+
+    return totalAmount;
+  }
+
+  /**
+   * Delete water entry
+   */
+  static async deleteWater(userId: string, waterId: string): Promise<void> {
+    // Find local entry
+    const localWater = await db.water
+      .where('ownerUserId')
+      .equals(userId)
+      .and((w) => w._id === waterId || `local-${w.id}` === waterId)
+      .first();
+
+    if (localWater) {
+      if (localWater._id && navigator.onLine) {
+        // Try to delete from server
+        try {
+          const res = await fetch(`/api/water/${localWater._id}`, {
+            method: 'DELETE',
+          });
+          if (res.ok) {
+            await db.water.delete(localWater.id!);
+            return;
+          }
+        } catch (error) {
+          console.error('Delete water error:', error);
+        }
+      }
+
+      // Add to outbox for later sync
+      await db.outbox.add({
+        userId,
+        entity: 'water',
+        op: 'delete',
+        payload: { _id: localWater._id || waterId },
+        createdAt: new Date(),
+        retryCount: 0,
+      });
+
+      // Delete locally
+      await db.water.delete(localWater.id!);
+    }
   }
 }

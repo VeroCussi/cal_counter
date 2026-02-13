@@ -15,6 +15,7 @@ const UserSchema = new mongoose.Schema({
     units: { type: String, enum: ['kg', 'lb'], default: 'kg' },
     timezone: { type: String, default: 'UTC' },
     pinRememberMinutes: { type: Number, default: 15 },
+    waterGoalMl: { type: Number, default: 2000, min: 500, max: 5000 },
     profile: {
       age: { type: Number, required: false },
       gender: { type: String, enum: ['male', 'female'], required: false },

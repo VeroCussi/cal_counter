@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { ProgressBars } from '@/components/macros/ProgressBars';
+import { MacroRing } from '@/components/macros/MacroRing';
 import { OfflineBadge } from '@/components/sync/OfflineBadge';
 import { SyncButton } from '@/components/sync/SyncButton';
 import { EditEntryModal } from '@/components/entry/EditEntryModal';
+import { MealSection } from '@/components/entry/MealSection';
 import { OfflineService, EntryWithFood } from '@/lib/offline-service';
 import { useToastContext } from '@/components/ui/ToastContainer';
-import Link from 'next/link';
+import { BottomNavigation } from '@/components/navigation/BottomNavigation';
+import { AddWaterModal } from '@/components/water/AddWaterModal';
+import { WaterTracker } from '@/components/water/WaterTracker';
 
 const mealTypes = [
   { key: 'breakfast', label: 'Desayuno' },
@@ -24,10 +27,14 @@ export default function TodayPage() {
   const [entries, setEntries] = useState<EntryWithFood[]>([]);
   const [loadingEntries, setLoadingEntries] = useState(true);
   const [editingEntry, setEditingEntry] = useState<EntryWithFood | null>(null);
+  const [showWaterModal, setShowWaterModal] = useState(false);
+  const [waterAmount, setWaterAmount] = useState(0); // ml de agua consumidos
+  const waterGoal = (user?.settings as any)?.waterGoalMl || 2000; // default 2000ml
 
   useEffect(() => {
     if (user) {
       loadEntries();
+      loadWater();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, date]);
@@ -45,6 +52,17 @@ export default function TodayPage() {
       toast.error('Error al cargar entradas');
     } finally {
       setLoadingEntries(false);
+    }
+  };
+
+  const loadWater = async () => {
+    if (!user) return;
+    
+    try {
+      const totalAmount = await OfflineService.loadWater(user._id, date);
+      setWaterAmount(totalAmount);
+    } catch (error) {
+      console.error('Error loading water:', error);
     }
   };
 
@@ -114,28 +132,6 @@ export default function TodayPage() {
     return d.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  const formatQuantity = (entry: EntryWithFood) => {
-    // If we have custom serving ID, try to find the label
-    if (entry.quantity.customServingId && entry.foodId.serving?.customServings) {
-      const customServing = entry.foodId.serving.customServings.find(
-        (s) => s.id === entry.quantity.customServingId
-      );
-      if (customServing) {
-        // Show label with value and unit
-        const unit = entry.quantity.displayUnit || 'g';
-        return `${customServing.label} (${customServing.value} ${unit})`;
-      }
-    }
-    
-    // If we have display value and unit, use that
-    if (entry.quantity.displayValue && entry.quantity.displayUnit) {
-      return `${entry.quantity.displayValue} ${entry.quantity.displayUnit}`;
-    }
-    
-    // Default: show grams
-    return `${entry.quantity.grams}g`;
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
       {user && <OfflineBadge userId={user._id} />}
@@ -159,118 +155,48 @@ export default function TodayPage() {
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 animate-fade-in transition-smooth hover:shadow-md">
           <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Resumen del día</h2>
-          <ProgressBars current={totals} goals={user.settings.goals} />
+          <MacroRing current={totals} goals={user.settings.goals} />
+          
+          {/* Water Tracker */}
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <WaterTracker current={waterAmount} goal={waterGoal} />
+          </div>
         </div>
 
-        {mealTypes.map((meal, index) => {
-          // Filter by meal type and remove duplicates by _id
-          const mealEntriesMap = new Map<string, EntryWithFood>();
-          entries
-            .filter((e) => e.mealType === meal.key)
-            .forEach((entry) => {
-              // Keep the first occurrence of each _id (or last if you prefer)
-              if (!mealEntriesMap.has(entry._id)) {
-                mealEntriesMap.set(entry._id, entry);
-              }
-            });
-          const mealEntries = Array.from(mealEntriesMap.values());
-          
-          const mealTotal = mealEntries.reduce(
-            (acc, e) => ({
-              kcal: acc.kcal + e.computedMacros.kcal,
-              protein: acc.protein + e.computedMacros.protein,
-              carbs: acc.carbs + e.computedMacros.carbs,
-              fat: acc.fat + e.computedMacros.fat,
-            }),
-            { kcal: 0, protein: 0, carbs: 0, fat: 0 }
-          );
-
-          return (
-            <div 
-              key={meal.key} 
-              className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4 animate-slide-up transition-smooth hover:shadow-md"
-              style={{ animationDelay: `${index * 50}ms` }}
-            >
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100">{meal.label}</h3>
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  {Math.round(mealTotal.kcal)} kcal
-                </span>
-              </div>
-
-              {mealEntries.length === 0 ? (
-                <p className="text-gray-400 dark:text-gray-500 text-sm mb-2">No hay alimentos</p>
-              ) : (
-                <ul className="space-y-2 mb-3">
-                  {mealEntries.map((entry, entryIndex) => (
-                    <li key={`${entry._id}-${meal.key}-${entryIndex}`} className="flex justify-between items-center text-sm group">
-                      <span className="text-gray-900 dark:text-gray-100">
-                        {entry.foodId.name}
-                        {entry.foodId.brand && ` (${entry.foodId.brand})`}
-                        <span className="text-gray-500 dark:text-gray-400 ml-2">
-                          {formatQuantity(entry)}
-                        </span>
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-600 dark:text-gray-300">
-                          {Math.round(entry.computedMacros.kcal)} kcal
-                        </span>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => setEditingEntry(entry)}
-                            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-xs px-2 py-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900"
-                            title="Editar"
-                          >
-                            ✏️
-                          </button>
-                          <button
-                            onClick={() => handleDeleteEntry(entry._id)}
-                            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-xs px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900"
-                            title="Eliminar"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              <Link
-                href={`/today/add?date=${date}&meal=${meal.key}`}
-                className="text-indigo-600 dark:text-indigo-400 text-sm font-medium hover:underline"
-              >
-                + Añadir alimento
-              </Link>
-            </div>
-          );
-        })}
+        {mealTypes.map((meal, index) => (
+          <MealSection
+            key={meal.key}
+            mealType={meal.key as 'breakfast' | 'lunch' | 'dinner' | 'snack'}
+            mealLabel={meal.label}
+            entries={entries}
+            date={date}
+            onEditEntry={setEditingEntry}
+            onDeleteEntry={handleDeleteEntry}
+            index={index}
+          />
+        ))}
       </div>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-        <div className="max-w-2xl mx-auto flex justify-around">
-          <Link href="/today" className="flex-1 py-3 text-center text-indigo-600 dark:text-indigo-400 font-medium">
-            Hoy
-          </Link>
-          <Link href="/foods" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
-            Alimentos
-          </Link>
-          <Link href="/weight" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
-            Peso
-          </Link>
-          <Link href="/settings" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
-            Ajustes
-          </Link>
-        </div>
-      </nav>
+      {/* Bottom Navigation with integrated FAB */}
+      <BottomNavigation
+        currentDate={date}
+        onAddWater={() => setShowWaterModal(true)}
+      />
 
       <EditEntryModal
         isOpen={editingEntry !== null}
         entry={editingEntry}
         onClose={() => setEditingEntry(null)}
         onSave={loadEntries}
+      />
+
+      <AddWaterModal
+        isOpen={showWaterModal}
+        onClose={() => setShowWaterModal(false)}
+        date={date}
+        onSuccess={() => {
+          loadWater();
+        }}
       />
     </div>
   );

@@ -87,6 +87,12 @@ export const weightSchema = z.object({
   weightKg: z.number().positive('El peso debe ser positivo'),
 });
 
+// Water validations
+export const waterSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida (YYYY-MM-DD)'),
+  amountMl: z.number().positive('La cantidad debe ser positiva'),
+});
+
 // Profile validations
 export const profileSchema = z.object({
   age: z.number().min(13).max(120).optional(),
@@ -114,6 +120,7 @@ export const settingsSchema = z.object({
   units: z.enum(['kg', 'lb']),
   timezone: z.string(),
   pinRememberMinutes: z.number().min(0).max(1440), // Max 24 horas
+  waterGoalMl: z.number().min(500).max(5000).optional(), // Objetivo de agua en ml
   profile: profileSchema.optional(),
 });
 

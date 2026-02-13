@@ -60,15 +60,18 @@ class SyncService {
 
       let response: Response;
       const baseUrl = '/api';
+      
+      // Handle different entity endpoint names
+      const entityEndpoint = entity === 'water' ? 'water' : `${entity}s`;
 
       if (op === 'create') {
-        response = await fetch(`${baseUrl}/${entity}s`, {
+        response = await fetch(`${baseUrl}/${entityEndpoint}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
       } else if (op === 'update') {
-        response = await fetch(`${baseUrl}/${entity}s/${payload._id || payload.id}`, {
+        response = await fetch(`${baseUrl}/${entityEndpoint}/${payload._id || payload.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -76,7 +79,7 @@ class SyncService {
       } else {
         // delete
         const entityId = payload._id || payload.id;
-        response = await fetch(`${baseUrl}/${entity}s/${entityId}`, {
+        response = await fetch(`${baseUrl}/${entityEndpoint}/${entityId}`, {
           method: 'DELETE',
         });
       }
@@ -123,11 +126,13 @@ class SyncService {
   }
 
   private async updateLocalEntity(
-    entity: 'food' | 'entry' | 'weight',
+    entity: 'food' | 'entry' | 'weight' | 'water',
     localId: number | string,
     updates: any
   ): Promise<void> {
-    const table = db[`${entity}s` as keyof typeof db] as any;
+    // Handle water separately since it doesn't follow the plural pattern
+    const tableName = entity === 'water' ? 'water' : `${entity}s`;
+    const table = db[tableName as keyof typeof db] as any;
     if (typeof localId === 'number') {
       await table.update(localId, updates);
     } else {
@@ -174,13 +179,22 @@ class SyncService {
           await this.mergeEntity('weights', weight, userId);
         }
       }
+
+      // Pull water entries (last 30 days)
+      const waterRes = await fetch(`/api/water?from=${fromDate}&to=${toDate}`);
+      if (waterRes.ok) {
+        const { waterEntries } = await waterRes.json();
+        for (const water of waterEntries || []) {
+          await this.mergeEntity('water', water, userId);
+        }
+      }
     } catch (error) {
       console.error('Pull from server error:', error);
     }
   }
 
   private async mergeEntity(
-    tableName: 'foods' | 'entries' | 'weights',
+    tableName: 'foods' | 'entries' | 'weights' | 'water',
     serverEntity: any,
     userId: string
   ): Promise<void> {
@@ -211,7 +225,7 @@ class SyncService {
 
   async addToOutbox(
     userId: string,
-    entity: 'food' | 'entry' | 'weight',
+    entity: 'food' | 'entry' | 'weight' | 'water',
     op: 'create' | 'update' | 'delete',
     payload: any,
     localId?: number

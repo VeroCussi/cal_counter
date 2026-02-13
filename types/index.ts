@@ -47,6 +47,7 @@ export interface User {
     units: 'kg' | 'lb';
     timezone: string;
     pinRememberMinutes: number;
+    waterGoalMl?: number;
     profile?: UserProfile;
   };
   createdAt: Date;
@@ -114,6 +115,15 @@ export interface WeightEntry {
   ownerUserId: string;
   date: string; // YYYY-MM-DD
   weightKg: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface WaterEntry {
+  _id: string;
+  ownerUserId: string;
+  date: string; // YYYY-MM-DD
+  amountMl: number;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -55,10 +55,21 @@ export interface LocalWeight {
   synced: boolean;
 }
 
+export interface LocalWater {
+  id?: number;
+  _id?: string;
+  ownerUserId: string;
+  date: string;
+  amountMl: number;
+  createdAt: Date;
+  updatedAt: Date;
+  synced: boolean;
+}
+
 export interface OutboxItem {
   id?: number;
   userId: string;
-  entity: 'food' | 'entry' | 'weight';
+  entity: 'food' | 'entry' | 'weight' | 'water';
   op: 'create' | 'update' | 'delete';
   payload: any;
   createdAt: Date;
@@ -75,15 +86,17 @@ class AppDatabase extends Dexie {
   foods!: Table<LocalFood, number>;
   entries!: Table<LocalEntry, number>;
   weights!: Table<LocalWeight, number>;
+  water!: Table<LocalWater, number>;
   outbox!: Table<OutboxItem, number>;
   meta!: Table<Meta, string>;
 
   constructor() {
     super('MacrosPesoDB');
-    this.version(1).stores({
+    this.version(2).stores({
       foods: '++id, _id, ownerUserId, name, synced',
       entries: '++id, _id, ownerUserId, date, synced',
       weights: '++id, _id, ownerUserId, date, synced',
+      water: '++id, _id, ownerUserId, date, synced',
       outbox: '++id, userId, entity, createdAt',
       meta: 'key',
     });

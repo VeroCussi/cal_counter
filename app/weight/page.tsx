@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import Link from 'next/link';
+import { BottomNavigation } from '@/components/navigation/BottomNavigation';
+import { WeightChart } from '@/components/weight/WeightChart';
 
 interface WeightEntry {
   _id: string;
@@ -69,12 +69,6 @@ export default function WeightPage() {
     }
   };
 
-  const chartData = weights
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .map((w) => ({
-      date: new Date(w.date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' }),
-      weight: w.weightKg,
-    }));
 
   if (loading) {
     return (
@@ -133,41 +127,13 @@ export default function WeightPage() {
               </div>
             </div>
 
-            {chartData.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 animate-fade-in transition-smooth hover:shadow-md">
-                <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Gráfico</h2>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="weight" stroke="#4f46e5" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            )}
+            {weights.length > 0 && <WeightChart weights={weights} />}
           </>
         )}
       </div>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-        <div className="max-w-2xl mx-auto flex justify-around">
-          <Link href="/today" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
-            Hoy
-          </Link>
-          <Link href="/foods" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
-            Alimentos
-          </Link>
-          <Link href="/weight" className="flex-1 py-3 text-center text-indigo-600 dark:text-indigo-400 font-medium">
-            Peso
-          </Link>
-          <Link href="/settings" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
-            Ajustes
-          </Link>
-        </div>
-      </nav>
+      <BottomNavigation />
     </div>
   );
 }
