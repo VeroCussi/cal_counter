@@ -54,57 +54,57 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div>Cargando...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-gray-900 dark:text-gray-100">Cargando...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold mb-6">Ajustes</h1>
+        <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Ajustes</h1>
 
         {/* Macro Calculator */}
         <MacroCalculator onGoalsApplied={(newGoals) => setGoals(newGoals)} />
 
-        <div className="bg-white rounded-lg shadow p-6 mb-6 animate-fade-in transition-smooth hover:shadow-md">
-          <h2 className="text-lg font-semibold mb-4">Objetivos diarios</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 animate-fade-in transition-smooth hover:shadow-md">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Objetivos diarios</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Calorías (kcal)</label>
+              <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">Calorías (kcal)</label>
               <input
                 type="number"
                 value={goals.kcal}
                 onChange={(e) => setGoals({ ...goals, kcal: parseInt(e.target.value) })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Proteína (g)</label>
+              <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">Proteína (g)</label>
               <input
                 type="number"
                 value={goals.protein}
                 onChange={(e) => setGoals({ ...goals, protein: parseInt(e.target.value) })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Carbohidratos (g)</label>
+              <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">Carbohidratos (g)</label>
               <input
                 type="number"
                 value={goals.carbs}
                 onChange={(e) => setGoals({ ...goals, carbs: parseInt(e.target.value) })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Grasa (g)</label>
+              <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">Grasa (g)</label>
               <input
                 type="number"
                 value={goals.fat}
                 onChange={(e) => setGoals({ ...goals, fat: parseInt(e.target.value) })}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             <button
@@ -117,19 +117,19 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 mb-6 animate-fade-in transition-smooth hover:shadow-md">
-          <h2 className="text-lg font-semibold mb-4">Cuenta</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 animate-fade-in transition-smooth hover:shadow-md">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Cuenta</h2>
           <div className="space-y-2">
-            <p className="text-sm">
+            <p className="text-sm text-gray-900 dark:text-gray-100">
               <span className="font-medium">Email:</span> {user?.email}
             </p>
-            <p className="text-sm">
+            <p className="text-sm text-gray-900 dark:text-gray-100">
               <span className="font-medium">Nombre:</span> {user?.name}
             </p>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 animate-fade-in transition-smooth hover:shadow-md">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 animate-fade-in transition-smooth hover:shadow-md">
           <button
             onClick={logout}
             className="w-full px-4 py-2 bg-red-600 text-white rounded transition-smooth hover:bg-red-700 hover:shadow-lg active:scale-95"
@@ -140,18 +140,18 @@ export default function SettingsPage() {
       </div>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
         <div className="max-w-2xl mx-auto flex justify-around">
-          <Link href="/today" className="flex-1 py-3 text-center text-gray-600">
+          <Link href="/today" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
             Hoy
           </Link>
-          <Link href="/foods" className="flex-1 py-3 text-center text-gray-600">
+          <Link href="/foods" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
             Alimentos
           </Link>
-          <Link href="/weight" className="flex-1 py-3 text-center text-gray-600">
+          <Link href="/weight" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
             Peso
           </Link>
-          <Link href="/settings" className="flex-1 py-3 text-center text-indigo-600 font-medium">
+          <Link href="/settings" className="flex-1 py-3 text-center text-indigo-600 dark:text-indigo-400 font-medium">
             Ajustes
           </Link>
         </div>

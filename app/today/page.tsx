@@ -78,7 +78,16 @@ export default function TodayPage() {
     }
   };
 
-  const totals = entries.reduce(
+  // Remove duplicates by _id before calculating totals (same logic as meal sections)
+  const uniqueEntriesMap = new Map<string, EntryWithFood>();
+  entries.forEach((entry) => {
+    if (!uniqueEntriesMap.has(entry._id)) {
+      uniqueEntriesMap.set(entry._id, entry);
+    }
+  });
+  const uniqueEntries = Array.from(uniqueEntriesMap.values());
+
+  const totals = uniqueEntries.reduce(
     (acc, entry) => ({
       kcal: acc.kcal + entry.computedMacros.kcal,
       protein: acc.protein + entry.computedMacros.protein,
@@ -90,8 +99,8 @@ export default function TodayPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div>Cargando...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-gray-900 dark:text-gray-100">Cargando...</div>
       </div>
     );
   }
@@ -128,33 +137,44 @@ export default function TodayPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
       {user && <OfflineBadge userId={user._id} />}
       
       <div className="max-w-2xl mx-auto px-4 py-6">
         <div className="mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold">Hoy</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Hoy</h1>
             <div className="flex gap-2">
               {user && <SyncButton userId={user._id} />}
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="border rounded px-2 py-1 text-sm"
+                className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>
-          <p className="text-gray-600">{formatDate(date)}</p>
+          <p className="text-gray-600 dark:text-gray-300">{formatDate(date)}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 mb-6 animate-fade-in transition-smooth hover:shadow-md">
-          <h2 className="text-lg font-semibold mb-4">Resumen del día</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 animate-fade-in transition-smooth hover:shadow-md">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Resumen del día</h2>
           <ProgressBars current={totals} goals={user.settings.goals} />
         </div>
 
         {mealTypes.map((meal, index) => {
-          const mealEntries = entries.filter((e) => e.mealType === meal.key);
+          // Filter by meal type and remove duplicates by _id
+          const mealEntriesMap = new Map<string, EntryWithFood>();
+          entries
+            .filter((e) => e.mealType === meal.key)
+            .forEach((entry) => {
+              // Keep the first occurrence of each _id (or last if you prefer)
+              if (!mealEntriesMap.has(entry._id)) {
+                mealEntriesMap.set(entry._id, entry);
+              }
+            });
+          const mealEntries = Array.from(mealEntriesMap.values());
+          
           const mealTotal = mealEntries.reduce(
             (acc, e) => ({
               kcal: acc.kcal + e.computedMacros.kcal,
@@ -168,44 +188,44 @@ export default function TodayPage() {
           return (
             <div 
               key={meal.key} 
-              className="bg-white rounded-lg shadow p-4 mb-4 animate-slide-up transition-smooth hover:shadow-md"
+              className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4 animate-slide-up transition-smooth hover:shadow-md"
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="flex justify-between items-center mb-3">
-                <h3 className="font-semibold">{meal.label}</h3>
-                <span className="text-sm text-gray-600">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">{meal.label}</h3>
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   {Math.round(mealTotal.kcal)} kcal
                 </span>
               </div>
 
               {mealEntries.length === 0 ? (
-                <p className="text-gray-400 text-sm mb-2">No hay alimentos</p>
+                <p className="text-gray-400 dark:text-gray-500 text-sm mb-2">No hay alimentos</p>
               ) : (
                 <ul className="space-y-2 mb-3">
-                  {mealEntries.map((entry) => (
-                    <li key={entry._id} className="flex justify-between items-center text-sm group">
-                      <span>
+                  {mealEntries.map((entry, entryIndex) => (
+                    <li key={`${entry._id}-${meal.key}-${entryIndex}`} className="flex justify-between items-center text-sm group">
+                      <span className="text-gray-900 dark:text-gray-100">
                         {entry.foodId.name}
                         {entry.foodId.brand && ` (${entry.foodId.brand})`}
-                        <span className="text-gray-500 ml-2">
+                        <span className="text-gray-500 dark:text-gray-400 ml-2">
                           {formatQuantity(entry)}
                         </span>
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-600">
+                        <span className="text-gray-600 dark:text-gray-300">
                           {Math.round(entry.computedMacros.kcal)} kcal
                         </span>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => setEditingEntry(entry)}
-                            className="text-indigo-600 hover:text-indigo-800 text-xs px-2 py-1 rounded hover:bg-indigo-50"
+                            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-xs px-2 py-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900"
                             title="Editar"
                           >
                             ✏️
                           </button>
                           <button
                             onClick={() => handleDeleteEntry(entry._id)}
-                            className="text-red-600 hover:text-red-800 text-xs px-2 py-1 rounded hover:bg-red-50"
+                            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-xs px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900"
                             title="Eliminar"
                           >
                             🗑️
@@ -219,7 +239,7 @@ export default function TodayPage() {
 
               <Link
                 href={`/today/add?date=${date}&meal=${meal.key}`}
-                className="text-indigo-600 text-sm font-medium hover:underline"
+                className="text-indigo-600 dark:text-indigo-400 text-sm font-medium hover:underline"
               >
                 + Añadir alimento
               </Link>
@@ -229,18 +249,18 @@ export default function TodayPage() {
       </div>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
         <div className="max-w-2xl mx-auto flex justify-around">
-          <Link href="/today" className="flex-1 py-3 text-center text-indigo-600 font-medium">
+          <Link href="/today" className="flex-1 py-3 text-center text-indigo-600 dark:text-indigo-400 font-medium">
             Hoy
           </Link>
-          <Link href="/foods" className="flex-1 py-3 text-center text-gray-600">
+          <Link href="/foods" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
             Alimentos
           </Link>
-          <Link href="/weight" className="flex-1 py-3 text-center text-gray-600">
+          <Link href="/weight" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
             Peso
           </Link>
-          <Link href="/settings" className="flex-1 py-3 text-center text-gray-600">
+          <Link href="/settings" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
             Ajustes
           </Link>
         </div>

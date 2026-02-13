@@ -55,8 +55,8 @@ export default function LockPage() {
 
   if (authLoading || checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-600">Cargando...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-gray-600 dark:text-gray-300">Cargando...</div>
       </div>
     );
   }
@@ -66,18 +66,18 @@ export default function LockPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             Macros & Peso
           </h1>
-          <p className="text-gray-600">Ingresa tu PIN para continuar</p>
+          <p className="text-gray-600 dark:text-gray-300">Ingresa tu PIN para continuar</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-center">
+            <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded text-center">
               {error}
             </div>
           )}
@@ -93,13 +93,13 @@ export default function LockPage() {
               pattern="[0-9]*"
               value={pin}
               onChange={handleChange}
-              className="w-full text-center text-3xl font-mono tracking-widest border-2 border-gray-300 rounded-lg px-4 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full text-center text-3xl font-mono tracking-widest border-2 border-gray-300 dark:border-gray-600 rounded-lg px-4 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               placeholder="••••"
               autoFocus
               maxLength={6}
               disabled={unlocking}
             />
-            <p className="mt-2 text-center text-sm text-gray-500">
+            <p className="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">
               PIN de 4 a 6 dígitos
             </p>
           </div>
@@ -119,7 +119,7 @@ export default function LockPage() {
               localStorage.removeItem('pinUnlockedUntil');
               router.push('/login');
             }}
-            className="text-sm text-gray-600 hover:text-gray-900"
+            className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
           >
             Cerrar sesión
           </button>

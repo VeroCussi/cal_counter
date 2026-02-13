@@ -5,12 +5,22 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --card-bg: #ffffff;
+  --text-primary: #171717;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9ca3af;
+  --border-color: #e5e7eb;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --card-bg: #1f2937;
+    --text-primary: #ededed;
+    --text-secondary: #9ca3af;
+    --text-tertiary: #6b7280;
+    --border-color: #374151;
   }
 }
 
@@ -99,13 +109,13 @@ body {
 }
 
 .btn-secondary {
-  @apply px-4 py-2 border border-gray-300 rounded-md font-medium transition-smooth;
-  @apply hover:bg-gray-50 hover:border-gray-400 active:scale-95;
+  @apply px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md font-medium transition-smooth;
+  @apply hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 active:scale-95;
 }
 
 /* Card hover effects */
 .card {
-  @apply bg-white rounded-lg shadow transition-smooth;
+  @apply bg-white dark:bg-gray-800 rounded-lg shadow transition-smooth;
   @apply hover:shadow-md;
 }
 

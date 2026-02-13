@@ -105,12 +105,12 @@ export function EditEntryModal({ isOpen, entry, onClose, onSave }: EditEntryModa
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg max-w-md w-full p-6 animate-scale-in">
+        <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 animate-scale-in">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">Editar entrada</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Editar entrada</h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl"
             >
               ×
             </button>
@@ -118,17 +118,17 @@ export function EditEntryModal({ isOpen, entry, onClose, onSave }: EditEntryModa
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
+              <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded text-sm">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium mb-2">Tipo de comida</label>
+              <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">Tipo de comida</label>
               <select
                 value={mealType}
                 onChange={(e) => setMealType(e.target.value as any)}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 <option value="breakfast">Desayuno</option>
                 <option value="lunch">Comida</option>
@@ -138,23 +138,23 @@ export function EditEntryModal({ isOpen, entry, onClose, onSave }: EditEntryModa
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Alimento</label>
+              <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">Alimento</label>
               {selectedFood ? (
-                <div className="border rounded p-3 bg-gray-50">
+                <div className="border border-gray-300 dark:border-gray-600 rounded p-3 bg-gray-50 dark:bg-gray-900">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-medium">{selectedFood.name}</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{selectedFood.name}</p>
                       {selectedFood.brand && (
-                        <p className="text-sm text-gray-600">{selectedFood.brand}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">{selectedFood.brand}</p>
                       )}
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {selectedFood.macros.kcal} kcal por 100g
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setShowFoodModal(true)}
-                      className="text-indigo-600 text-sm"
+                      className="text-indigo-600 dark:text-indigo-400 text-sm hover:text-indigo-800 dark:hover:text-indigo-300"
                     >
                       Cambiar
                     </button>
@@ -164,7 +164,7 @@ export function EditEntryModal({ isOpen, entry, onClose, onSave }: EditEntryModa
                 <button
                   type="button"
                   onClick={() => setShowFoodModal(true)}
-                  className="w-full border-2 border-dashed border-gray-300 rounded px-3 py-4 text-gray-600 transition-smooth hover:border-indigo-600 hover:text-indigo-600 hover:bg-indigo-50"
+                  className="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded px-3 py-4 text-gray-600 dark:text-gray-300 transition-smooth hover:border-indigo-600 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900"
                 >
                   + Seleccionar alimento
                 </button>
@@ -172,22 +172,22 @@ export function EditEntryModal({ isOpen, entry, onClose, onSave }: EditEntryModa
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Cantidad (gramos)</label>
+              <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">Cantidad (gramos)</label>
               <input
                 type="number"
                 step="0.1"
                 value={grams}
                 onChange={(e) => setGrams(e.target.value)}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 placeholder="100"
                 required
               />
             </div>
 
             {selectedFood && grams && !isNaN(parseFloat(grams)) && (
-              <div className="bg-blue-50 p-3 rounded text-sm">
-                <p className="font-medium mb-1">Macros calculados:</p>
-                <p>
+              <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded text-sm border border-blue-200 dark:border-blue-700">
+                <p className="font-medium mb-1 text-gray-900 dark:text-gray-100">Macros calculados:</p>
+                <p className="text-gray-900 dark:text-gray-100">
                   {Math.round((selectedFood.macros.kcal * parseFloat(grams)) / 100)} kcal |{' '}
                   P: {Math.round((selectedFood.macros.protein * parseFloat(grams)) / 100)}g |{' '}
                   C: {Math.round((selectedFood.macros.carbs * parseFloat(grams)) / 100)}g |{' '}
@@ -200,7 +200,7 @@ export function EditEntryModal({ isOpen, entry, onClose, onSave }: EditEntryModa
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 border rounded transition-smooth hover:bg-gray-50"
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded transition-smooth hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
                 Cancelar
               </button>

@@ -267,8 +267,8 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
     : latestWeight;
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 mb-6 animate-fade-in transition-smooth hover:shadow-md">
-      <h2 className="text-lg font-semibold mb-4">Calculador de Macros</h2>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 animate-fade-in transition-smooth hover:shadow-md">
+      <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Calculador de Macros</h2>
 
       <div className="space-y-4">
         {/* Age */}
@@ -280,7 +280,7 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
             max="120"
             value={profile.age || ''}
             onChange={(e) => setProfile({ ...profile, age: e.target.value ? parseInt(e.target.value) : undefined })}
-            className="w-full border rounded px-3 py-2"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             placeholder="Ej: 30"
           />
         </div>
@@ -328,7 +328,7 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
               const heightCm = parseHeight(e.target.value);
               setProfile({ ...profile, heightCm });
             }}
-            className="w-full border rounded px-3 py-2"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             placeholder={units === 'kg' ? 'Ej: 165' : 'Ej: 65'}
           />
         </div>
@@ -339,14 +339,14 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
             Peso actual ({units === 'kg' ? 'kg' : 'lb'}) <span className="text-red-500">*</span>
           </label>
           {loadingWeight ? (
-            <div className="text-sm text-gray-500">Cargando peso más reciente...</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Cargando peso más reciente...</div>
           ) : (
             <>
               {latestWeight && !useManualWeight ? (
                 <div>
-                  <div className="mb-2 p-2 bg-gray-50 rounded border border-gray-200">
+                  <div className="mb-2 p-2 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
                         Peso más reciente: <span className="font-semibold">{displayWeight(latestWeight)} {units === 'kg' ? 'kg' : 'lb'}</span>
                       </span>
                       <button
@@ -366,7 +366,7 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
                     min="0"
                     value={manualWeight}
                     onChange={(e) => setManualWeight(e.target.value)}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     placeholder={`Ingresa tu peso (${units === 'kg' ? 'kg' : 'lb'})`}
                     required
                   />
@@ -393,7 +393,7 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
           <select
             value={profile.activityLevel || ''}
             onChange={(e) => setProfile({ ...profile, activityLevel: e.target.value as UserProfile['activityLevel'] })}
-            className="w-full border rounded px-3 py-2"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           >
             <option value="">Selecciona...</option>
             <option value="sedentary">Sedentario (poco o ningún ejercicio)</option>
@@ -418,7 +418,7 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
                 cutIntensity: newGoal === 'cut' ? (profile.cutIntensity || 'gentle') : undefined,
               });
             }}
-            className="w-full border rounded px-3 py-2"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           >
             <option value="">Selecciona...</option>
             <option value="cut">Pérdida de peso</option>
@@ -434,7 +434,7 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
             <select
               value={profile.cutIntensity || 'gentle'}
               onChange={(e) => setProfile({ ...profile, cutIntensity: e.target.value as CutIntensity })}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               <option value="gentle">Suave (recomendado): -250 kcal/día (~0,25 kg/sem)</option>
               <option value="moderate">Moderado: -400 kcal/día (~0,4 kg/sem)</option>
@@ -477,10 +477,10 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
           </select>
 
           {profile.macroDistribution?.type === 'custom' && (
-            <div className="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
-              <p className="text-sm font-medium text-gray-700 mb-2">Configuración Personalizada (%)</p>
+            <div className="mt-3 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 space-y-3">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Configuración Personalizada (%)</p>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Proteína (%)</label>
+                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Proteína (%)</label>
                 <input
                   type="number"
                   min="0"
@@ -502,11 +502,11 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
                       },
                     });
                   }}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Grasa (%)</label>
+                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Grasa (%)</label>
                 <input
                   type="number"
                   min="0"
@@ -528,25 +528,25 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
                       },
                     });
                   }}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Carbohidratos (%)</label>
+                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Carbohidratos (%)</label>
                 <input
                   type="number"
                   min="0"
                   max="100"
                   value={customMacros.carbs}
                   readOnly
-                  className="w-full border rounded px-3 py-2 bg-gray-100"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Calculado automáticamente: {customMacros.carbs}%
                 </p>
               </div>
               <div className="pt-2 border-t">
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
                   Total: <span className="font-semibold">{customMacros.protein + customMacros.fat + customMacros.carbs}%</span>
                 </p>
               </div>
@@ -560,10 +560,10 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
             <div className="space-y-6">
               {/* Calories to maintain weight */}
               <div className="text-center">
-                <p className="text-sm text-gray-600 mb-1">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                   Calorías necesarias para mantener tu peso
                 </p>
-                <p className="text-3xl font-bold text-gray-900">
+                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                   {calculation.tdee} kcal
                 </p>
               </div>
@@ -580,14 +580,14 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
 
               {/* Macronutrient Breakdown */}
               <div className="grid grid-cols-3 gap-4">
-                <div className="bg-white border-2 border-gray-200 rounded-lg p-4 text-center shadow-sm">
-                  <p className="text-sm font-medium text-gray-600 mb-2">Proteína</p>
-                  <p className="text-3xl font-bold text-gray-900">
+                <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 text-center shadow-sm">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Proteína</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                     {calculation.macros.protein}
                   </p>
-                  <p className="text-sm text-gray-500 mt-1">g</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">g</p>
                   {profile.macroDistribution && (
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                       {(() => {
                         const dist = profile.macroDistribution.type === 'custom' && profile.macroDistribution.proteinPercent
                           ? { protein: profile.macroDistribution.proteinPercent, fat: profile.macroDistribution.fatPercent || 0, carbs: profile.macroDistribution.carbsPercent || 0 }
@@ -597,14 +597,14 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
                     </p>
                   )}
                 </div>
-                <div className="bg-white border-2 border-gray-200 rounded-lg p-4 text-center shadow-sm">
-                  <p className="text-sm font-medium text-gray-600 mb-2">Carbohidratos</p>
-                  <p className="text-3xl font-bold text-gray-900">
+                <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 text-center shadow-sm">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Carbohidratos</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                     {calculation.macros.carbs}
                   </p>
-                  <p className="text-sm text-gray-500 mt-1">g</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">g</p>
                   {profile.macroDistribution && (
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                       {(() => {
                         const dist = profile.macroDistribution.type === 'custom' && profile.macroDistribution.proteinPercent
                           ? { protein: profile.macroDistribution.proteinPercent, fat: profile.macroDistribution.fatPercent || 0, carbs: profile.macroDistribution.carbsPercent || 0 }
@@ -614,14 +614,14 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
                     </p>
                   )}
                 </div>
-                <div className="bg-white border-2 border-gray-200 rounded-lg p-4 text-center shadow-sm">
-                  <p className="text-sm font-medium text-gray-600 mb-2">Grasa</p>
-                  <p className="text-3xl font-bold text-gray-900">
+                <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 text-center shadow-sm">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Grasa</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                     {calculation.macros.fat}
                   </p>
-                  <p className="text-sm text-gray-500 mt-1">g</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">g</p>
                   {profile.macroDistribution && (
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                       {(() => {
                         const dist = profile.macroDistribution.type === 'custom' && profile.macroDistribution.proteinPercent
                           ? { protein: profile.macroDistribution.proteinPercent, fat: profile.macroDistribution.fatPercent || 0, carbs: profile.macroDistribution.carbsPercent || 0 }
@@ -634,22 +634,22 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
               </div>
 
               {/* Additional Info */}
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-gray-600 mb-1">BMR (Metabolismo basal)</p>
-                    <p className="font-semibold text-gray-900">{calculation.bmr} kcal</p>
+                    <p className="text-gray-600 dark:text-gray-400 mb-1">BMR (Metabolismo basal)</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">{calculation.bmr} kcal</p>
                   </div>
                   <div>
-                    <p className="text-gray-600 mb-1">TDEE (Gasto calórico total)</p>
-                    <p className="font-semibold text-gray-900">{calculation.tdee} kcal</p>
+                    <p className="text-gray-600 dark:text-gray-400 mb-1">TDEE (Gasto calórico total)</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">{calculation.tdee} kcal</p>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <p className="text-sm text-yellow-800">
+            <div className="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
                 {!hasWeight 
                   ? '⚠️ Por favor ingresa tu peso actual para calcular tus macros.'
                   : !hasAllFields
@@ -665,7 +665,7 @@ export default function MacroCalculator({ onGoalsApplied }: MacroCalculatorProps
           <button
             onClick={handleSaveProfile}
             disabled={saving || !profile.age || !profile.gender || !profile.heightCm || !profile.activityLevel || !profile.goal}
-            className="flex-1 px-4 py-2 bg-gray-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-2 bg-gray-600 dark:bg-gray-700 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? 'Guardando...' : 'Guardar Perfil'}
           </button>

@@ -143,9 +143,9 @@ export default function NewFoodPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
       <div className="max-w-md mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Nuevo alimento</h1>
+        <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Nuevo alimento</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -155,7 +155,7 @@ export default function NewFoodPage() {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               required
             />
           </div>
@@ -167,7 +167,7 @@ export default function NewFoodPage() {
               name="brand"
               value={formData.brand}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -205,7 +205,7 @@ export default function NewFoodPage() {
               name="servingType"
               value={formData.servingType}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               <option value={formData.baseUnit === 'g' ? 'per100g' : 'per100ml'}>
                 Por 100{formData.baseUnit}
@@ -223,7 +223,7 @@ export default function NewFoodPage() {
                 name="servingSize"
                 value={formData.servingSize}
                 onChange={handleChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 required
               />
             </div>
@@ -235,49 +235,49 @@ export default function NewFoodPage() {
             </label>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Calorías *</label>
+                <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">Calorías *</label>
                 <input
                   type="number"
                   name="kcal"
                   value={formData.kcal}
                   onChange={handleChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Proteína (g) *</label>
+                <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">Proteína (g) *</label>
                 <input
                   type="number"
                   step="0.1"
                   name="protein"
                   value={formData.protein}
                   onChange={handleChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Carbohidratos (g) *</label>
+                <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">Carbohidratos (g) *</label>
                 <input
                   type="number"
                   step="0.1"
                   name="carbs"
                   value={formData.carbs}
                   onChange={handleChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Grasa (g) *</label>
+                <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">Grasa (g) *</label>
                 <input
                   type="number"
                   step="0.1"
                   name="fat"
                   value={formData.fat}
                   onChange={handleChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   required
                 />
               </div>

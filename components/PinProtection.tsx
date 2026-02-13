@@ -69,8 +69,8 @@ export function PinProtection({ children }: PinProtectionProps) {
   // For protected routes, show loading while checking
   if (isChecking || authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-600">Cargando...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-gray-600 dark:text-gray-300">Cargando...</div>
       </div>
     );
   }

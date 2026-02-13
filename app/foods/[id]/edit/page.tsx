@@ -121,16 +121,16 @@ export default function EditFoodPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-600">Cargando...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-gray-600 dark:text-gray-300">Cargando...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
       <div className="max-w-md mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Editar alimento</h1>
+        <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Editar alimento</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -140,7 +140,7 @@ export default function EditFoodPage() {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               required
             />
           </div>
@@ -152,7 +152,7 @@ export default function EditFoodPage() {
               name="brand"
               value={formData.brand}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -162,7 +162,7 @@ export default function EditFoodPage() {
               name="servingType"
               value={formData.servingType}
               onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               <option value="per100g">Por 100g</option>
               <option value="perServing">Por porción</option>
@@ -177,7 +177,7 @@ export default function EditFoodPage() {
                 name="servingSizeG"
                 value={formData.servingSizeG}
                 onChange={handleChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 required={formData.servingType === 'perServing'}
               />
             </div>
@@ -191,7 +191,7 @@ export default function EditFoodPage() {
                 name="kcal"
                 value={formData.kcal}
                 onChange={handleChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 required
               />
             </div>
@@ -203,7 +203,7 @@ export default function EditFoodPage() {
                 name="protein"
                 value={formData.protein}
                 onChange={handleChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 required
               />
             </div>
@@ -215,7 +215,7 @@ export default function EditFoodPage() {
                 name="carbs"
                 value={formData.carbs}
                 onChange={handleChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 required
               />
             </div>
@@ -227,7 +227,7 @@ export default function EditFoodPage() {
                 name="fat"
                 value={formData.fat}
                 onChange={handleChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 required
               />
             </div>

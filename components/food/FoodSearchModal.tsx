@@ -188,10 +188,10 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-xl font-bold">Buscar alimento</h2>
+        <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Buscar alimento</h2>
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
@@ -204,7 +204,7 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
             </button>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl"
             >
               ×
             </button>
@@ -212,7 +212,7 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b">
+        <div className="flex border-b border-gray-200 dark:border-gray-700">
           <button
             onClick={() => {
               setActiveTab('favorites');
@@ -221,8 +221,8 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
             }}
             className={`flex-1 px-4 py-2 text-center font-medium ${
               activeTab === 'favorites'
-                ? 'border-b-2 border-indigo-600 text-indigo-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'border-b-2 border-indigo-600 dark:border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
             }`}
           >
             Mis favoritos
@@ -235,8 +235,8 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
             }}
             className={`flex-1 px-4 py-2 text-center font-medium ${
               activeTab === 'off'
-                ? 'border-b-2 border-indigo-600 text-indigo-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'border-b-2 border-indigo-600 dark:border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
             }`}
           >
             Open Food Facts
@@ -249,8 +249,8 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
             }}
             className={`flex-1 px-4 py-2 text-center font-medium ${
               activeTab === 'usda'
-                ? 'border-b-2 border-indigo-600 text-indigo-600'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'border-b-2 border-indigo-600 dark:border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
             }`}
           >
             USDA
@@ -258,7 +258,7 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
         </div>
 
         {/* Search */}
-        <div className="p-4 border-b">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex gap-2">
             <input
               type="text"
@@ -276,7 +276,7 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
                   ? 'Buscar en Open Food Facts...'
                   : 'Buscar en USDA...'
               }
-              className="flex-1 border rounded px-3 py-2"
+              className="flex-1 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
             />
             {(activeTab === 'off' || activeTab === 'usda') && (
               <button
@@ -289,7 +289,7 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
             )}
           </div>
           {error && (
-            <div className="mt-2 text-sm text-red-600">{error}</div>
+            <div className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</div>
           )}
         </div>
 
@@ -298,7 +298,7 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
           {activeTab === 'favorites' && (
             <div className="space-y-2">
               {filteredFavorites.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">
+                <p className="text-center text-gray-500 dark:text-gray-400 py-8">
                   {searchQuery ? 'No se encontraron alimentos' : 'No tienes alimentos favoritos'}
                 </p>
               ) : (
@@ -306,13 +306,13 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
                   <button
                     key={food._id}
                     onClick={() => handleSelectFavorite(food)}
-                    className="w-full text-left p-3 border rounded hover:bg-gray-50"
+                    className="w-full text-left p-3 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100"
                   >
                     <div className="font-medium">{food.name}</div>
                     {food.brand && (
-                      <div className="text-sm text-gray-600">{food.brand}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">{food.brand}</div>
                     )}
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {food.macros.kcal} kcal | P: {food.macros.protein}g | C: {food.macros.carbs}g | G: {food.macros.fat}g
                     </div>
                   </button>
@@ -324,7 +324,7 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
           {activeTab === 'off' && (
             <div className="space-y-2">
               {offResults.length === 0 && !loading && searchQuery && (
-                <p className="text-center text-gray-500 py-8">
+                <p className="text-center text-gray-500 dark:text-gray-400 py-8">
                   No se encontraron resultados
                 </p>
               )}
@@ -332,22 +332,22 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
                 <button
                   key={index}
                   onClick={() => handleSelectExternal(product)}
-                  className="w-full text-left p-3 border rounded hover:bg-gray-50"
+                  className="w-full text-left p-3 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100"
                 >
                   <div className="font-medium">{product.name}</div>
                   {product.brand && (
-                    <div className="text-sm text-gray-600">{product.brand}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">{product.brand}</div>
                   )}
                   {product.macros ? (
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {product.macros.kcal} kcal | P: {product.macros.protein}g | C: {product.macros.carbs}g | G: {product.macros.fat}g
                     </div>
                   ) : (
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Cargando datos nutricionales...
                     </div>
                   )}
-                  <div className="text-xs text-indigo-600 mt-1">
+                  <div className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">
                     Guardar en favoritos
                   </div>
                 </button>
@@ -358,7 +358,7 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
           {activeTab === 'usda' && (
             <div className="space-y-2">
               {usdaResults.length === 0 && !loading && searchQuery && (
-                <p className="text-center text-gray-500 py-8">
+                <p className="text-center text-gray-500 dark:text-gray-400 py-8">
                   No se encontraron resultados
                 </p>
               )}
@@ -366,22 +366,22 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
                 <button
                   key={index}
                   onClick={() => handleSelectExternal(product)}
-                  className="w-full text-left p-3 border rounded hover:bg-gray-50"
+                  className="w-full text-left p-3 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100"
                 >
                   <div className="font-medium">{product.name}</div>
                   {product.brand && (
-                    <div className="text-sm text-gray-600">{product.brand}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">{product.brand}</div>
                   )}
                   {product.macros ? (
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {product.macros.kcal} kcal | P: {product.macros.protein}g | C: {product.macros.carbs}g | G: {product.macros.fat}g
                     </div>
                   ) : (
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Cargando datos nutricionales...
                     </div>
                   )}
-                  <div className="text-xs text-indigo-600 mt-1">
+                  <div className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">
                     Guardar en favoritos
                   </div>
                 </button>

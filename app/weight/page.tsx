@@ -78,19 +78,19 @@ export default function WeightPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div>Cargando...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-gray-900 dark:text-gray-100">Cargando...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold mb-6">Peso</h1>
+        <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Peso</h1>
 
-        <div className="bg-white rounded-lg shadow p-6 mb-6 animate-fade-in transition-smooth hover:shadow-md">
-          <h2 className="text-lg font-semibold mb-4">Registrar peso de hoy</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 animate-fade-in transition-smooth hover:shadow-md">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Registrar peso de hoy</h2>
           <form onSubmit={handleSubmit} className="flex gap-2">
             <input
               type="number"
@@ -98,7 +98,7 @@ export default function WeightPage() {
               placeholder="Peso en kg"
               value={todayWeight}
               onChange={(e) => setTodayWeight(e.target.value)}
-              className="flex-1 border rounded px-3 py-2"
+              className="flex-1 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
             <button
               type="submit"
@@ -110,20 +110,20 @@ export default function WeightPage() {
         </div>
 
         {loadingWeights ? (
-          <div className="text-center py-8">Cargando...</div>
+          <div className="text-center py-8 text-gray-900 dark:text-gray-100">Cargando...</div>
         ) : weights.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             No hay registros de peso
           </div>
         ) : (
           <>
-            <div className="bg-white rounded-lg shadow p-6 mb-6 animate-fade-in transition-smooth hover:shadow-md">
-              <h2 className="text-lg font-semibold mb-4">Últimos registros</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 animate-fade-in transition-smooth hover:shadow-md">
+              <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Últimos registros</h2>
               <div className="space-y-2">
                 {weights.slice(0, 10).map((w, index) => (
                   <div 
                     key={w._id} 
-                    className="flex justify-between text-sm animate-slide-up transition-smooth hover:bg-gray-50 p-2 rounded"
+                    className="flex justify-between text-sm animate-slide-up transition-smooth hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded text-gray-900 dark:text-gray-100"
                     style={{ animationDelay: `${index * 30}ms` }}
                   >
                     <span>{new Date(w.date).toLocaleDateString('es-ES')}</span>
@@ -134,8 +134,8 @@ export default function WeightPage() {
             </div>
 
             {chartData.length > 0 && (
-              <div className="bg-white rounded-lg shadow p-6 animate-fade-in transition-smooth hover:shadow-md">
-                <h2 className="text-lg font-semibold mb-4">Gráfico</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 animate-fade-in transition-smooth hover:shadow-md">
+                <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Gráfico</h2>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -152,18 +152,18 @@ export default function WeightPage() {
       </div>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
         <div className="max-w-2xl mx-auto flex justify-around">
-          <Link href="/today" className="flex-1 py-3 text-center text-gray-600">
+          <Link href="/today" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
             Hoy
           </Link>
-          <Link href="/foods" className="flex-1 py-3 text-center text-gray-600">
+          <Link href="/foods" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
             Alimentos
           </Link>
-          <Link href="/weight" className="flex-1 py-3 text-center text-indigo-600 font-medium">
+          <Link href="/weight" className="flex-1 py-3 text-center text-indigo-600 dark:text-indigo-400 font-medium">
             Peso
           </Link>
-          <Link href="/settings" className="flex-1 py-3 text-center text-gray-600">
+          <Link href="/settings" className="flex-1 py-3 text-center text-gray-600 dark:text-gray-300">
             Ajustes
           </Link>
         </div>

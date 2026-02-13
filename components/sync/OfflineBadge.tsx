@@ -10,7 +10,7 @@ export function OfflineBadge({ userId }: { userId: string }) {
   }
 
   return (
-    <div className="fixed top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-medium z-50">
+    <div className="fixed top-4 right-4 bg-yellow-500 dark:bg-yellow-600 text-white px-3 py-1 rounded-full text-xs font-medium z-50">
       Sin conexión
     </div>
   );

@@ -123,22 +123,22 @@ export default function AddEntryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 animate-fade-in">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 animate-fade-in">
       <div className="max-w-md mx-auto">
-        <h1 className="text-2xl font-bold mb-6 animate-slide-down">Añadir alimento</h1>
+        <h1 className="text-2xl font-bold mb-6 animate-slide-down text-gray-900 dark:text-gray-100">Añadir alimento</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">Seleccionar alimento</label>
             {selectedFood ? (
-              <div className="border rounded p-3 bg-gray-50">
+              <div className="border border-gray-300 dark:border-gray-600 rounded p-3 bg-gray-50 dark:bg-gray-900">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium">{selectedFood.name}</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{selectedFood.name}</p>
                     {selectedFood.brand && (
-                      <p className="text-sm text-gray-600">{selectedFood.brand}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{selectedFood.brand}</p>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {selectedFood.macros.kcal} kcal {getMacroLabel()}
                     </p>
                   </div>
@@ -149,7 +149,7 @@ export default function AddEntryPage() {
                       setSelectedCustomServingId(null);
                       setCustomValue('');
                     }}
-                    className="text-red-600 text-sm"
+                    className="text-red-600 dark:text-red-400 text-sm hover:text-red-800 dark:hover:text-red-300"
                   >
                     Cambiar
                   </button>
@@ -159,7 +159,7 @@ export default function AddEntryPage() {
               <button
                 type="button"
                 onClick={() => setShowModal(true)}
-                className="w-full border-2 border-dashed border-gray-300 rounded px-3 py-4 text-gray-600 transition-smooth hover:border-indigo-600 hover:text-indigo-600 hover:bg-indigo-50 active:scale-95"
+                className="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded px-3 py-4 text-gray-600 dark:text-gray-300 transition-smooth hover:border-indigo-600 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900 active:scale-95"
               >
                 + Buscar alimento
               </button>
@@ -178,8 +178,8 @@ export default function AddEntryPage() {
                         key={serving.id}
                         className={`flex items-center p-3 border rounded cursor-pointer transition-colors ${
                           selectedCustomServingId === serving.id
-                            ? 'border-indigo-600 bg-indigo-50'
-                            : 'border-gray-300 hover:border-gray-400'
+                            ? 'border-indigo-600 dark:border-indigo-500 bg-indigo-50 dark:bg-indigo-900'
+                            : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                         }`}
                       >
                         <input
@@ -194,8 +194,8 @@ export default function AddEntryPage() {
                           className="mr-3"
                         />
                         <div className="flex-1">
-                          <span className="font-medium">{serving.label}</span>
-                          <span className="text-sm text-gray-600 ml-2">
+                          <span className="font-medium text-gray-900 dark:text-gray-100">{serving.label}</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-300 ml-2">
                             ({serving.value} {baseUnit})
                           </span>
                         </div>
@@ -226,7 +226,7 @@ export default function AddEntryPage() {
                           setSelectedCustomServingId(null);
                         }}
                         placeholder={`Cantidad (${unitLabel})`}
-                        className="flex-1 border rounded px-2 py-1"
+                        className="flex-1 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                     </label>
                   </div>
@@ -237,7 +237,7 @@ export default function AddEntryPage() {
                   step="0.1"
                   value={customValue}
                   onChange={(e) => setCustomValue(e.target.value)}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   placeholder={`Cantidad (${unitLabel})`}
                   required
                 />
@@ -246,24 +246,24 @@ export default function AddEntryPage() {
           )}
 
           {computedMacros && (
-            <div className="bg-blue-50 p-4 rounded text-sm">
-              <p className="font-medium mb-2">Macros calculados:</p>
+            <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded text-sm border border-blue-200 dark:border-blue-700">
+              <p className="font-medium mb-2 text-gray-900 dark:text-gray-100">Macros calculados:</p>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-gray-600">Calorías:</span>{' '}
-                  <span className="font-semibold">{Math.round(computedMacros.kcal)} kcal</span>
+                  <span className="text-gray-600 dark:text-gray-300">Calorías:</span>{' '}
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">{Math.round(computedMacros.kcal)} kcal</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Proteína:</span>{' '}
-                  <span className="font-semibold">{computedMacros.protein}g</span>
+                  <span className="text-gray-600 dark:text-gray-300">Proteína:</span>{' '}
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">{computedMacros.protein}g</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Carbohidratos:</span>{' '}
-                  <span className="font-semibold">{computedMacros.carbs}g</span>
+                  <span className="text-gray-600 dark:text-gray-300">Carbohidratos:</span>{' '}
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">{computedMacros.carbs}g</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Grasa:</span>{' '}
-                  <span className="font-semibold">{computedMacros.fat}g</span>
+                  <span className="text-gray-600 dark:text-gray-300">Grasa:</span>{' '}
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">{computedMacros.fat}g</span>
                 </div>
               </div>
             </div>
@@ -273,7 +273,7 @@ export default function AddEntryPage() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="flex-1 px-4 py-2 border rounded"
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               Cancelar
             </button>

@@ -25,7 +25,7 @@ export function SyncButton({ userId }: { userId: string }) {
     return (
       <button
         disabled
-        className="px-3 py-1 text-xs bg-gray-400 text-white rounded cursor-not-allowed"
+        className="px-3 py-1 text-xs bg-gray-400 dark:bg-gray-600 text-white rounded cursor-not-allowed"
         title="Sin conexión"
       >
         Sin conexión
