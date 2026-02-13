@@ -61,7 +61,9 @@ export interface CustomServing {
 
 export interface Food {
   _id: string;
-  ownerUserId: string;
+  ownerUserId?: string; // Opcional para alimentos compartidos
+  isShared?: boolean;
+  createdByUserId?: string;
   name: string;
   brand?: string;
   serving: {

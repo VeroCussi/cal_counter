@@ -4,7 +4,19 @@ const FoodSchema = new mongoose.Schema({
   ownerUserId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
+    required: false, // Opcional para alimentos compartidos
+    default: null, // Permitir null explícitamente
+    index: true,
+  },
+  isShared: {
+    type: Boolean,
+    default: false,
+    index: true, // Índice para búsquedas rápidas
+  },
+  createdByUserId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false, // Solo para alimentos compartidos
     index: true,
   },
   name: { type: String, required: true },
@@ -46,5 +58,9 @@ const FoodSchema = new mongoose.Schema({
 // Index for faster queries
 FoodSchema.index({ ownerUserId: 1, name: 1 });
 FoodSchema.index({ ownerUserId: 1, barcode: 1 });
+// Nuevos índices para alimentos compartidos
+FoodSchema.index({ isShared: 1, name: 1 }); // Para búsquedas de alimentos compartidos
+FoodSchema.index({ isShared: 1, name: 1, brand: 1 }); // Búsqueda con marca
+FoodSchema.index({ isShared: 1, source: 1 }); // Por fuente
 
 export default mongoose.models.Food || mongoose.model('Food', FoodSchema);

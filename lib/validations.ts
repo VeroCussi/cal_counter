@@ -56,6 +56,15 @@ export const foodSchema = z.object({
   source: z.enum(['custom', 'openfoodfacts', 'usda']),
   externalId: z.string().optional(),
   barcode: z.string().optional(),
+  isShared: z.boolean().optional().default(false),
+}).refine((data) => {
+  // Solo alimentos custom pueden ser compartidos
+  if (data.isShared && data.source !== 'custom') {
+    return false;
+  }
+  return true;
+}, {
+  message: 'Solo los alimentos personalizados pueden ser compartidos',
 });
 
 // Entry validations

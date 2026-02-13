@@ -308,7 +308,14 @@ export function FoodSearchModal({ isOpen, onClose, onSelectFood }: FoodSearchMod
                     onClick={() => handleSelectFavorite(food)}
                     className="w-full text-left p-3 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100"
                   >
-                    <div className="font-medium">{food.name}</div>
+                    <div className="flex items-center justify-between">
+                      <div className="font-medium">{food.name}</div>
+                      {food.isShared && (
+                        <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+                          Compartido
+                        </span>
+                      )}
+                    </div>
                     {food.brand && (
                       <div className="text-sm text-gray-600 dark:text-gray-300">{food.brand}</div>
                     )}

@@ -30,18 +30,39 @@ export async function PUT(
 
     await connectDB();
 
-    const food = await Food.findOneAndUpdate(
-      { _id: id, ownerUserId: authUser.userId },
-      validated,
-      { new: true, runValidators: true }
-    );
+    // Primero obtener el alimento para verificar permisos
+    const existingFood = await Food.findById(id);
 
-    if (!food) {
+    if (!existingFood) {
       return NextResponse.json(
         { error: 'Alimento no encontrado' },
         { status: 404 }
       );
     }
+
+    // Verificar permisos: para alimentos compartidos solo el creador puede editar
+    if (existingFood.isShared) {
+      if (existingFood.createdByUserId?.toString() !== authUser.userId) {
+        return NextResponse.json(
+          { error: 'No tienes permiso para modificar este alimento compartido' },
+          { status: 403 }
+        );
+      }
+    } else {
+      // Para alimentos privados, solo el owner puede editar
+      if (existingFood.ownerUserId?.toString() !== authUser.userId) {
+        return NextResponse.json(
+          { error: 'No tienes permiso para modificar este alimento' },
+          { status: 403 }
+        );
+      }
+    }
+
+    const food = await Food.findOneAndUpdate(
+      { _id: id },
+      validated,
+      { new: true, runValidators: true }
+    );
 
     return NextResponse.json({ food });
   } catch (error: any) {
@@ -83,10 +104,35 @@ export async function DELETE(
     }
     await connectDB();
 
-    const food = await Food.findOneAndDelete({
-      _id: id,
-      ownerUserId: authUser.userId,
-    });
+    // Primero obtener el alimento para verificar permisos
+    const existingFood = await Food.findById(id);
+
+    if (!existingFood) {
+      return NextResponse.json(
+        { error: 'Alimento no encontrado' },
+        { status: 404 }
+      );
+    }
+
+    // Verificar permisos: para alimentos compartidos solo el creador puede eliminar
+    if (existingFood.isShared) {
+      if (existingFood.createdByUserId?.toString() !== authUser.userId) {
+        return NextResponse.json(
+          { error: 'No tienes permiso para eliminar este alimento compartido' },
+          { status: 403 }
+        );
+      }
+    } else {
+      // Para alimentos privados, solo el owner puede eliminar
+      if (existingFood.ownerUserId?.toString() !== authUser.userId) {
+        return NextResponse.json(
+          { error: 'No tienes permiso para eliminar este alimento' },
+          { status: 403 }
+        );
+      }
+    }
+
+    const food = await Food.findByIdAndDelete(id);
 
     if (!food) {
       return NextResponse.json(

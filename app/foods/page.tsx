@@ -90,8 +90,15 @@ export default function FoodsPage() {
                 style={{ animationDelay: `${index * 30}ms` }}
               >
                 <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">{food.name}</h3>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">{food.name}</h3>
+                      {food.isShared && (
+                        <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+                          Compartido
+                        </span>
+                      )}
+                    </div>
                     {food.brand && (
                       <p className="text-sm text-gray-600 dark:text-gray-300">{food.brand}</p>
                     )}
@@ -99,12 +106,14 @@ export default function FoodsPage() {
                       {food.macros.kcal} kcal | P: {food.macros.protein}g | C: {food.macros.carbs}g | G: {food.macros.fat}g
                     </p>
                   </div>
-                  <Link
-                    href={`/foods/${food._id}/edit`}
-                    className="text-indigo-600 dark:text-indigo-400 text-sm hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
-                  >
-                    Editar
-                  </Link>
+                  {(!food.isShared || food.createdByUserId === user?._id) && (
+                    <Link
+                      href={`/foods/${food._id}/edit`}
+                      className="text-indigo-600 dark:text-indigo-400 text-sm hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors ml-2"
+                    >
+                      Editar
+                    </Link>
+                  )}
                 </div>
               </div>
             ))}

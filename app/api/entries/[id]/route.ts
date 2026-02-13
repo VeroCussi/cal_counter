@@ -57,7 +57,10 @@ export async function PUT(
 
     const food = await Food.findOne({
       _id: validated.foodId,
-      ownerUserId: authUser.userId,
+      $or: [
+        { ownerUserId: authUser.userId },
+        { isShared: true }
+      ]
     });
 
     if (!food) {

@@ -64,10 +64,13 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    // Get food to calculate macros
+    // Get food to calculate macros - buscar en alimentos del usuario Y compartidos
     const food = await Food.findOne({
       _id: validated.foodId,
-      ownerUserId: authUser.userId,
+      $or: [
+        { ownerUserId: authUser.userId },
+        { isShared: true }
+      ]
     });
 
     if (!food) {

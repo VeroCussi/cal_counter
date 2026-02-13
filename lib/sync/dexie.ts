@@ -3,7 +3,9 @@ import Dexie, { Table } from 'dexie';
 export interface LocalFood {
   id?: number;           // Dexie auto-increment
   _id?: string;          // MongoDB _id (cuando sync)
-  ownerUserId: string;
+  ownerUserId?: string; // Opcional para alimentos compartidos
+  isShared?: boolean;
+  createdByUserId?: string;
   name: string;
   brand?: string;
   serving: {
