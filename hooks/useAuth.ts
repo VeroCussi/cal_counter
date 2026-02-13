@@ -7,6 +7,7 @@ interface User {
   _id: string;
   email: string;
   name: string;
+  hasPin?: boolean; // PIN status from API
   settings: {
     goals: {
       kcal: number;

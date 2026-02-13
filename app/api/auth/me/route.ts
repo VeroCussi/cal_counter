@@ -27,7 +27,8 @@ export async function GET(request: NextRequest) {
       throw dbError;
     }
 
-    const user = await User.findById(authUser.userId).select('-passwordHash -pinHash');
+    // First, get user with pinHash to check if PIN is set
+    const user = await User.findById(authUser.userId).select('-passwordHash');
     
     if (!user) {
       return NextResponse.json(
@@ -36,18 +37,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if user has PIN enabled
+    // Check if user has PIN enabled (before excluding pinHash)
     const hasPin = !!user.pinHash;
+    
+    // Now exclude pinHash from the response (for security)
+    const userResponse = user.toObject();
+    delete userResponse.pinHash;
 
     return NextResponse.json({
       user: {
-        _id: user._id.toString(),
-        email: user.email,
-        name: user.name,
-        settings: user.settings,
+        _id: userResponse._id.toString(),
+        email: userResponse.email,
+        name: userResponse.name,
+        settings: userResponse.settings,
         hasPin, // Include PIN status
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
+        createdAt: userResponse.createdAt,
+        updatedAt: userResponse.updatedAt,
       },
     });
   } catch (error) {

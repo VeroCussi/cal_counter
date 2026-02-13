@@ -9,7 +9,7 @@ import { exportUserData, downloadExport, importUserData, ExportData } from '@/li
 import { useToastContext } from '@/components/ui/ToastContainer';
 
 export default function SettingsPage() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, refresh } = useAuth();
   const router = useRouter();
   const toast = useToastContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -35,7 +35,7 @@ export default function SettingsPage() {
       setGoals(user.settings.goals);
       setWaterGoalMl((user.settings as any).waterGoalMl || 2000);
       setPinRememberMinutes(user.settings.pinRememberMinutes || 15);
-      setHasPin((user as any).hasPin || false);
+      setHasPin(user.hasPin || false);
     }
   }, [user]);
 
@@ -161,11 +161,18 @@ export default function SettingsPage() {
       });
 
       if (res.ok) {
-        toast.success('PIN configurado correctamente');
+        // Clear PIN inputs
         setNewPin('');
         setConfirmPin('');
-        // Refresh user data
-        window.location.reload();
+        
+        // Update local state immediately
+        setHasPin(true);
+        
+        // Refresh user data from server
+        await refresh();
+        
+        // Show success message
+        toast.success('✓ PIN configurado correctamente. La aplicación ahora está protegida.');
       } else {
         const data = await res.json();
         toast.error(data.error || 'Error al configurar PIN');
@@ -192,12 +199,18 @@ export default function SettingsPage() {
       });
 
       if (res.ok) {
-        toast.success('PIN desactivado');
         // Clear localStorage
         localStorage.removeItem('pinUnlockedUntil');
         localStorage.removeItem('pinRememberMinutes');
-        // Refresh user data
-        window.location.reload();
+        
+        // Update local state immediately
+        setHasPin(false);
+        
+        // Refresh user data from server
+        await refresh();
+        
+        // Show success message
+        toast.success('PIN desactivado correctamente');
       } else {
         const data = await res.json();
         toast.error(data.error || 'Error al desactivar PIN');
